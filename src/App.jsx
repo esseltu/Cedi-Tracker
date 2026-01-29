@@ -15,10 +15,17 @@ function App() {
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard'); // dashboard, history, analysis
+  const [filterType, setFilterType] = useState('all'); // 'all', 'income', 'expense'
   const [showAddModal, setShowAddModal] = useState(false);
 
   // State
   const [transactions, setTransactions] = useState([]);
+
+  // Filter Logic
+  const filteredTransactions = transactions.filter(t => {
+    if (filterType === 'all') return true;
+    return t.type === filterType;
+  });
 
   // Derived State (Memoized)
   const balance = React.useMemo(() => {
@@ -213,10 +220,29 @@ function App() {
             </div>
           </div>
 
+          {/* Filters */}
+          {(activeTab === 'dashboard' || activeTab === 'history') && (
+            <div className="flex gap-2">
+              {['all', 'expense', 'income'].map((type) => (
+                <button
+                  key={type}
+                  onClick={() => setFilterType(type)}
+                  className={`px-4 py-1.5 text-xs font-semibold rounded-full capitalize transition-all ${
+                    filterType === type 
+                      ? 'bg-gray-800 text-white shadow-md' 
+                      : 'bg-white text-gray-500 border border-gray-100'
+                  }`}
+                >
+                  {type}
+                </button>
+              ))}
+            </div>
+          )}
+
           {activeTab === 'dashboard' && (
             <>
-              <TransactionList transactions={transactions.slice(0, 5)} onDelete={handleDeleteTransaction} />
-              {transactions.length > 5 && (
+              <TransactionList transactions={filteredTransactions.slice(0, 5)} onDelete={handleDeleteTransaction} />
+              {filteredTransactions.length > 5 && (
                 <button onClick={() => setActiveTab('history')} className="w-full py-2 text-sm text-center text-gray-500 hover:text-emerald-600">
                   View All
                 </button>
@@ -225,7 +251,7 @@ function App() {
           )}
 
           {activeTab === 'history' && (
-             <TransactionList transactions={transactions} onDelete={handleDeleteTransaction} />
+             <TransactionList transactions={filteredTransactions} onDelete={handleDeleteTransaction} />
           )}
 
           {activeTab === 'analysis' && (
