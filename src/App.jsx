@@ -6,6 +6,7 @@ import AddTransaction from './components/AddTransaction';
 import TransactionList from './components/TransactionList';
 import FeedbackCard from './components/FeedbackCard';
 import Login from './components/Login';
+import IncomeSuggestionModal from './components/IncomeSuggestionModal';
 import { FaHistory, FaChartPie, FaSignOutAlt } from 'react-icons/fa';
 import { db, auth, googleProvider } from './firebase';
 import { collection, addDoc, onSnapshot, query, where, deleteDoc, doc, Timestamp } from 'firebase/firestore';
@@ -17,6 +18,7 @@ function App() {
   const [activeTab, setActiveTab] = useState('dashboard'); // dashboard, history, analysis
   const [filterType, setFilterType] = useState('all'); // 'all', 'income', 'expense'
   const [showAddModal, setShowAddModal] = useState(false);
+  const [lastIncome, setLastIncome] = useState(null); // For income suggestion modal
 
   // State
   const [transactions, setTransactions] = useState([]);
@@ -135,6 +137,11 @@ function App() {
         uid: user.uid, // Attach User ID
         createdAt: Timestamp.now()
       });
+      
+      // If Income, trigger suggestion
+      if (transaction.type === 'income') {
+        setLastIncome(transaction);
+      }
     } catch (e) {
       console.error("Error adding document: ", e);
       alert("Failed to save transaction. Check internet connection.");
@@ -266,6 +273,12 @@ function App() {
         isOpen={showAddModal} 
         onClose={() => setShowAddModal(false)} 
         onAdd={handleAddTransaction} 
+      />
+
+      {/* Income Suggestion Modal */}
+      <IncomeSuggestionModal 
+        income={lastIncome} 
+        onClose={() => setLastIncome(null)} 
       />
     </div>
   );
