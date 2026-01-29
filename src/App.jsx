@@ -142,11 +142,19 @@ function App() {
   };
 
   const handleDeleteTransaction = async (id) => {
+    // 1. Immediate UI Feedback (Optimistic Update)
+    const originalTransactions = [...transactions];
+    setTransactions(prev => prev.filter(t => t.id !== id));
+
     try {
+      // 2. Perform Delete
       await deleteDoc(doc(db, 'transactions', id));
+      console.log("Document deleted successfully from Firestore");
     } catch (e) {
       console.error("Error deleting document: ", e);
       alert(`Failed to delete: ${e.message}`);
+      // 3. Revert on Error
+      setTransactions(originalTransactions);
     }
   };
 
