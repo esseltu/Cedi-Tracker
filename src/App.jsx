@@ -18,9 +18,36 @@ function App() {
   const [showAddModal, setShowAddModal] = useState(false);
 
   // State
-  const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
-  const [creditScore, setCreditScore] = useState(500);
+
+  // Derived State (Memoized)
+  const balance = React.useMemo(() => {
+    return transactions.reduce((acc, t) => {
+      return t.type === 'income' ? acc + t.amount : acc - t.amount;
+    }, 0);
+  }, [transactions]);
+
+  const creditScore = React.useMemo(() => {
+    let score = 500;
+    transactions.forEach(t => {
+      let change = 0;
+      if (t.type === 'income') {
+        change = 20; 
+      } else {
+        if (t.category === 'Savings/Invest') {
+          change = 40;
+        } else if (t.amount > 200) {
+          change = -20;
+        } else if (t.category === 'Entertainment' && t.amount > 100) {
+          change = -10;
+        } else {
+          change = 5;
+        }
+      }
+      score += change;
+    });
+    return Math.max(300, Math.min(850, score));
+  }, [transactions]);
 
   // Auth Listener
   useEffect(() => {
@@ -66,39 +93,6 @@ function App() {
 
       setTransactions(fetchedTransactions);
       setLoading(false); // Data loaded
-      
-      // Calculate Balance
-      let newBalance = 0;
-      fetchedTransactions.forEach(t => {
-        if (t.type === 'income') {
-          newBalance += t.amount;
-        } else {
-          newBalance -= t.amount;
-        }
-      });
-      setBalance(newBalance);
-
-      // Recalculate Credit Score based on all history
-      let score = 500;
-      fetchedTransactions.forEach(t => {
-        let change = 0;
-        if (t.type === 'income') {
-          change = 20; 
-        } else {
-          if (t.category === 'Savings/Invest') {
-            change = 40;
-          } else if (t.amount > 200) {
-            change = -20;
-          } else if (t.category === 'Entertainment' && t.amount > 100) {
-            change = -10;
-          } else {
-            change = 5;
-          }
-        }
-        score += change;
-      });
-      // Clamp score
-      setCreditScore(Math.max(300, Math.min(850, score)));
     }, (error) => {
       console.error("Error fetching transactions: ", error);
       setLoading(false);
@@ -120,7 +114,6 @@ function App() {
     try {
       await signOut(auth);
       setTransactions([]);
-      setBalance(0);
     } catch (error) {
       console.error("Logout failed:", error);
     }
