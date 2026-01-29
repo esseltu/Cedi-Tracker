@@ -3,7 +3,25 @@ import { motion } from 'framer-motion';
 import { FaPlus, FaWallet } from 'react-icons/fa';
 import CreditScoreGauge from './CreditScoreGauge';
 
-const Dashboard = ({ balance, creditScore, onAddClick }) => {
+const Dashboard = ({ balance, creditScore, transactions = [], onAddClick }) => {
+  const getAdvice = () => {
+    // 1. Check Today's Spending
+    const today = new Date().toISOString().split('T')[0];
+    const todaysExpenses = transactions
+      .filter(t => t.date === today && t.type === 'expense')
+      .reduce((sum, t) => sum + t.amount, 0);
+
+    // 2. Logic Hierarchy
+    if (balance < 0) return "🛑 Critical: You are in debt. Stop spending immediately!";
+    if (balance < 50) return "⚠️ Low funds. Only essential spending recommended.";
+    if (todaysExpenses > 300) return "📉 High spending today. Try to slow down.";
+    if (creditScore < 550) return "🛑 Credit score needs work. Reduce spending to rebuild.";
+    if (creditScore >= 750 && balance > 500) return "✅ Excellent health! Safe to spend responsibly.";
+    if (balance > 200) return "💡 Safe to spend, but keep saving.";
+    
+    return "ℹ️ Spend wisely. Every Cedi counts.";
+  };
+
   return (
     <div className="space-y-6">
       {/* Balance Card */}
@@ -24,7 +42,7 @@ const Dashboard = ({ balance, creditScore, onAddClick }) => {
             </div>
           </div>
           <p className="mt-2 text-[10px] text-emerald-100/80 font-light">
-            Keep it up! Safe to spend today.
+            {getAdvice()}
           </p>
         </div>
       </motion.div>

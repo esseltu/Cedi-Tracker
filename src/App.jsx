@@ -193,6 +193,7 @@ function App() {
         <Dashboard 
           balance={balance} 
           creditScore={creditScore} 
+          transactions={transactions}
           onAddClick={() => setShowAddModal(true)} 
         />
 
