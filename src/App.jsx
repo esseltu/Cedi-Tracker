@@ -146,6 +146,7 @@ function App() {
       await deleteDoc(doc(db, 'transactions', id));
     } catch (e) {
       console.error("Error deleting document: ", e);
+      alert(`Failed to delete: ${e.message}`);
     }
   };
 

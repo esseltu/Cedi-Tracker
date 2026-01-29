@@ -56,8 +56,15 @@ const TransactionList = ({ transactions, onDelete }) => {
               </span>
               {onDelete && (
                 <button 
-                  onClick={() => onDelete(t.id)}
-                  className="p-2 text-gray-300 hover:text-red-500 transition-colors"
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (window.confirm('Are you sure you want to delete this?')) {
+                      onDelete(t.id);
+                    }
+                  }}
+                  className="p-2 text-gray-300 hover:text-red-500 transition-colors cursor-pointer relative z-10"
+                  title="Delete Transaction"
                 >
                   <FaTrash size={12} />
                 </button>
