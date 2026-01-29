@@ -132,16 +132,14 @@ const AddTransaction = ({ isOpen, onClose, onAdd }) => {
                 </div>
               </div>
 
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
-                  <input 
-                    type="date" 
-                    value={date}
-                    onChange={(e) => setDate(e.target.value)}
-                    className="glass-input w-full py-2 text-sm"
-                  />
-                </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
+                <input 
+                  type="date" 
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  className="glass-input w-full py-2 text-sm"
+                />
               </div>
 
               <div>
