@@ -76,8 +76,8 @@ function App() {
     
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const fetchedTransactions = snapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
+        ...doc.data(),
+        id: doc.id
       }));
 
       // Client-side sort: Date desc, then CreatedAt desc

@@ -32,7 +32,6 @@ const AddTransaction = ({ isOpen, onClose, onAdd }) => {
     if (!amount) return;
 
     onAdd({
-      id: Date.now().toString(),
       amount: parseFloat(amount),
       category,
       note,
