@@ -112,7 +112,7 @@ function App() {
       await signInWithPopup(auth, googleProvider);
     } catch (error) {
       console.error("Login failed:", error);
-      alert("Login failed. Please try again.");
+      alert(`Login failed: ${error.message}`);
     }
   };
 
