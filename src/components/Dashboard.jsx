@@ -25,28 +25,70 @@ const Dashboard = ({ balance, creditScore, transactions = [], onAddClick }) => {
 
   return (
     <div className="space-y-6">
-      {/* Balance Card */}
-      <motion.div 
+      {/* Balance Card - ATM style */}
+      <motion.div
         initial={{ y: 20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="glass-card p-5 bg-gradient-to-br from-emerald-500/90 to-teal-600/90 text-white border-none shadow-xl relative overflow-hidden"
+        className="relative overflow-hidden rounded-2xl shadow-xl text-white"
       >
-        <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/10 rounded-full blur-2xl"></div>
-        <div className="relative z-10">
-          <div className="flex justify-between items-start">
-            <div>
-              <p className="text-emerald-100 text-xs font-medium mb-1">Total Balance</p>
-              <h1 className="text-3xl font-bold tracking-tight">{formatCurrency(balance)}</h1>
+        {/* Background gradient and textures */}
+        <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 to-teal-700 dark:from-emerald-700 dark:to-teal-800" />
+        <div className="absolute -top-8 -right-10 w-56 h-56 bg-white/10 rounded-full blur-3xl" />
+        <div className="absolute -bottom-16 -left-10 w-72 h-72 bg-black/10 dark:bg-black/20 rounded-full blur-3xl" />
+
+        {/* Subtle diagonal stripes */}
+        <div className="absolute inset-0 opacity-[0.08] dark:opacity-[0.12] pointer-events-none"
+             style={{ backgroundImage: 'repeating-linear-gradient(135deg, rgba(255,255,255,0.25) 0px, rgba(255,255,255,0.25) 2px, transparent 2px, transparent 6px)' }} />
+
+        {/* Card content */}
+        <div className="relative z-10 p-5">
+          {/* Top row: brand + contactless */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="relative w-10 h-7 rounded-md bg-gradient-to-br from-amber-200 via-amber-400 to-yellow-500 border border-white/35 shadow-[0_10px_18px_rgba(0,0,0,0.18),inset_0_1px_0_rgba(255,255,255,0.55)] overflow-hidden">
+                <div className="absolute -inset-4 bg-gradient-to-r from-white/45 via-white/0 to-black/15 rotate-12 opacity-80" />
+                <div className="absolute inset-[2px] rounded-[7px] border border-black/10" />
+
+                <div className="absolute left-[3px] top-[3px] bottom-[3px] w-[9px] rounded-sm bg-white/28 border border-black/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.35)]" />
+                <div className="absolute left-[14px] top-[3px] right-[3px] h-[9px] rounded-sm bg-white/22 border border-black/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.30)]" />
+                <div className="absolute left-[14px] bottom-[3px] right-[3px] h-[9px] rounded-sm bg-white/18 border border-black/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.25)]" />
+
+                <div className="absolute left-[12px] top-[3px] bottom-[3px] w-px bg-black/10" />
+                <div className="absolute left-[14px] right-[3px] top-1/2 h-px bg-black/10" />
+              </div>
+              <span className="text-xs uppercase tracking-widest text-white/80">Cedi Card</span>
             </div>
-            <div className="p-2 bg-white/20 rounded-lg backdrop-blur-md">
-              <FaWallet className="text-lg text-white" />
+            <div className="p-2 bg-white/15 rounded-lg backdrop-blur-sm">
+              <FaWallet className="text-white/90" />
             </div>
           </div>
-          <p className="mt-2 text-[10px] text-emerald-100/80 font-light">
-            {getAdvice()}
-          </p>
+
+          {/* Middle: masked number */}
+          <div className="mt-6 font-mono tracking-widest text-lg">
+            <span className="inline-block mr-2">****</span>
+            <span className="inline-block mr-2">****</span>
+            <span className="inline-block mr-2">****</span>
+            <span className="inline-block">1234</span>
+          </div>
+
+          {/* Bottom row: holder + balance */}
+          <div className="mt-6 flex items-end justify-between">
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-white/60">Card Holder</p>
+              <p className="text-sm font-semibold">You</p>
+            </div>
+            <div className="text-right">
+              <p className="text-[10px] uppercase tracking-wider text-white/60">Balance</p>
+              <p className="text-2xl font-bold">{formatCurrency(balance)}</p>
+            </div>
+          </div>
         </div>
       </motion.div>
+
+      {/* Small advisory text under the card */}
+      <p className="text-[11px] text-gray-600 dark:text-gray-400 px-1 -mt-1">
+        {getAdvice()}
+      </p>
 
       {/* Actions & Score */}
       <div className="grid grid-cols-2 gap-4">

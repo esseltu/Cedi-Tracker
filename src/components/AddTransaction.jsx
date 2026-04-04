@@ -66,23 +66,23 @@ const AddTransaction = ({ isOpen, onClose, onAdd }) => {
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="w-full sm:w-96 bg-white/80 backdrop-blur-xl border-t border-white/50 rounded-t-3xl sm:rounded-2xl shadow-2xl p-5 pointer-events-auto pb-6 sm:pb-6 m-0 sm:m-4"
+            className="w-full sm:w-96 bg-white/80 backdrop-blur-xl border-t border-white/50 rounded-t-3xl sm:rounded-2xl shadow-2xl p-5 pointer-events-auto pb-6 sm:pb-6 m-0 sm:m-4 dark:bg-gray-900/80 dark:border-gray-800"
           >
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg font-bold text-gray-800">New Transaction</h2>
-              <button onClick={onClose} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors">
-                <FaTimes className="text-gray-500 text-sm" />
+              <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">New Transaction</h2>
+              <button onClick={onClose} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 transition-colors dark:bg-gray-800 dark:hover:bg-gray-700">
+                <FaTimes className="text-gray-500 text-sm dark:text-gray-300" />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-3">
               {/* Type Toggle */}
-              <div className="flex p-1 bg-gray-100 rounded-xl">
+              <div className="flex p-1 bg-gray-100 rounded-xl dark:bg-gray-800">
                 <button
                   type="button"
                   onClick={() => { setType('expense'); setCategory(expenseCategories[0].id); }}
                   className={`flex-1 py-1.5 text-sm font-semibold rounded-lg transition-all ${
-                    type === 'expense' ? 'bg-white text-red-500 shadow-sm' : 'text-gray-500'
+                    type === 'expense' ? 'bg-white text-red-500 shadow-sm dark:bg-gray-700' : 'text-gray-500 dark:text-gray-400'
                   }`}
                 >
                   Expense
@@ -91,7 +91,7 @@ const AddTransaction = ({ isOpen, onClose, onAdd }) => {
                   type="button"
                   onClick={() => { setType('income'); setCategory(incomeCategories[0].id); }}
                   className={`flex-1 py-1.5 text-sm font-semibold rounded-lg transition-all ${
-                    type === 'income' ? 'bg-white text-emerald-500 shadow-sm' : 'text-gray-500'
+                    type === 'income' ? 'bg-white text-emerald-500 shadow-sm dark:bg-gray-700' : 'text-gray-500 dark:text-gray-400'
                   }`}
                 >
                   Income
@@ -99,20 +99,20 @@ const AddTransaction = ({ isOpen, onClose, onAdd }) => {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Amount (₵)</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-300">Amount (₵)</label>
                 <input 
                   type="number" 
                   step="0.01"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   placeholder="0.00"
-                  className="w-full text-2xl font-bold bg-transparent border-b-2 border-gray-200 focus:border-emerald-500 outline-none py-1 px-1 text-gray-800 placeholder:text-gray-300 transition-colors"
+                  className="w-full text-2xl font-bold bg-transparent border-b-2 border-gray-200 focus:border-emerald-500 outline-none py-1 px-1 text-gray-800 placeholder:text-gray-300 transition-colors dark:border-gray-700 dark:text-gray-100 dark:placeholder:text-gray-500"
                   autoFocus
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-2">Category</label>
+                <label className="block text-xs font-medium text-gray-600 mb-2 dark:text-gray-300">Category</label>
                 <div className="grid grid-cols-3 gap-2">
                   {categories.map((cat) => (
                     <button
@@ -121,8 +121,8 @@ const AddTransaction = ({ isOpen, onClose, onAdd }) => {
                       onClick={() => setCategory(cat.id)}
                       className={`flex flex-col items-center justify-center p-2 rounded-xl border transition-all ${
                         category === cat.id 
-                          ? 'bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm' 
-                          : 'bg-white/40 border-transparent hover:bg-white/60 text-gray-500'
+                          ? 'bg-emerald-50 border-emerald-500 text-emerald-700 shadow-sm dark:bg-emerald-900/30 dark:text-emerald-300' 
+                          : 'bg-white/40 border-transparent hover:bg-white/60 text-gray-500 dark:bg-gray-800/40 dark:hover:bg-gray-800/60 dark:text-gray-400'
                       }`}
                     >
                       <cat.icon className={`text-lg mb-1 ${category === cat.id ? 'text-emerald-600' : cat.color}`} />
@@ -133,7 +133,7 @@ const AddTransaction = ({ isOpen, onClose, onAdd }) => {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Date</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-300">Date</label>
                 <input 
                   type="date" 
                   value={date}
@@ -143,7 +143,7 @@ const AddTransaction = ({ isOpen, onClose, onAdd }) => {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Note (Optional)</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1 dark:text-gray-300">Note (Optional)</label>
                 <input 
                   type="text" 
                   value={note}

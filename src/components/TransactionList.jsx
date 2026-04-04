@@ -35,24 +35,24 @@ const TransactionList = ({ transactions, onDelete }) => {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
-            className="flex items-center justify-between p-3 bg-white/40 backdrop-blur-sm rounded-xl border border-white/50 shadow-sm hover:shadow-md transition-all group"
+            className="flex items-center justify-between p-3 bg-white/40 backdrop-blur-sm rounded-xl border border-white/50 shadow-sm hover:shadow-md transition-all group dark:bg-gray-800/40 dark:border-gray-700"
           >
             <div className="flex items-center gap-3">
               <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                isIncome ? 'bg-emerald-100 text-emerald-600' : 'bg-red-50 text-red-500'
+                isIncome ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-300' : 'bg-red-50 text-red-500 dark:bg-red-900/30 dark:text-red-300'
               }`}>
                 <Icon className="text-sm" />
               </div>
               <div>
-                <p className="font-semibold text-gray-800 text-sm">{t.category}</p>
-                <p className="text-[10px] text-gray-400 font-medium uppercase tracking-wide">
+                <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm">{t.category}</p>
+                <p className="text-[10px] text-gray-400 dark:text-gray-400 font-medium uppercase tracking-wide">
                   {format(new Date(t.date), 'MMM d')}
                 </p>
               </div>
             </div>
             
             <div className="flex items-center gap-2">
-              <span className={`font-bold text-sm ${isIncome ? 'text-emerald-600' : 'text-gray-800'}`}>
+              <span className={`font-bold text-sm ${isIncome ? 'text-emerald-600' : 'text-gray-800 dark:text-gray-100'}`}>
                 {isIncome ? '+' : '-'} {formatCurrency(t.amount)}
               </span>
               {onDelete && (
@@ -64,7 +64,7 @@ const TransactionList = ({ transactions, onDelete }) => {
                       onDelete(t.id);
                     }
                   }}
-                  className="p-2 text-gray-300 hover:text-red-500 transition-colors cursor-pointer relative z-10"
+                  className="p-2 text-gray-300 dark:text-gray-400 hover:text-red-500 transition-colors cursor-pointer relative z-10"
                   title="Delete Transaction"
                 >
                   <FaTrash size={12} />

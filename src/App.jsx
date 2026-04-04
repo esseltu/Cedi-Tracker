@@ -7,7 +7,7 @@ import TransactionList from './components/TransactionList';
 import FeedbackCard from './components/FeedbackCard';
 import Login from './components/Login';
 import IncomeSuggestionModal from './components/IncomeSuggestionModal';
-import { FaHistory, FaChartPie, FaSignOutAlt } from 'react-icons/fa';
+import { FaHistory, FaChartPie, FaSignOutAlt, FaMoon, FaSun } from 'react-icons/fa';
 import { db, auth, googleProvider } from './firebase';
 import { collection, addDoc, onSnapshot, query, where, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
@@ -22,6 +22,24 @@ function App() {
   const [showUndo, setShowUndo] = useState(false);
   const [undoTx, setUndoTx] = useState(null);
   const undoTimerRef = useRef(null);
+  const getInitialTheme = () => {
+    try {
+      const stored = localStorage.getItem('theme');
+      if (stored === 'dark' || stored === 'light') return stored;
+      const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      return prefersDark ? 'dark' : 'light';
+    } catch {
+      return 'light';
+    }
+  };
+  const [theme, setTheme] = useState(getInitialTheme);
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme(t => (t === 'dark' ? 'light' : 'dark'));
 
   // State
   const [transactions, setTransactions] = useState([]);
@@ -213,12 +231,15 @@ function App() {
   return (
     <div className="min-h-screen pb-24 max-w-md mx-auto relative">
       {/* Header */}
-      <header className="px-6 pt-8 pb-4 flex justify-between items-center sticky top-0 z-30 bg-gray-100/80 backdrop-blur-md">
+      <header className="px-6 pt-8 pb-4 flex justify-between items-center sticky top-0 z-30 bg-gray-100/80 dark:bg-gray-900/80 backdrop-blur-md">
         <div>
-          <h1 className="text-xl font-bold text-gray-800">Cedi Tracker</h1>
-          <p className="text-xs text-gray-500">Welcome, {user.displayName?.split(' ')[0] || 'Chief'}</p>
+          <h1 className="text-xl font-bold text-gray-800 dark:text-gray-100">Cedi Tracker</h1>
+          <p className="text-xs text-gray-500 dark:text-gray-400">Welcome, {user.displayName?.split(' ')[0] || 'Chief'}</p>
         </div>
         <div className="flex items-center gap-3">
+          <button type="button" onClick={toggleTheme} className="text-gray-600 dark:text-gray-300 hover:text-emerald-600 transition-colors" aria-label="Toggle theme">
+            {theme === 'dark' ? <FaSun /> : <FaMoon />}
+          </button>
           {user.photoURL ? (
             <img src={user.photoURL} alt="Profile" className="w-8 h-8 rounded-full border border-emerald-200" />
           ) : (
@@ -233,7 +254,7 @@ function App() {
       </header>
 
       {/* Main Content */}
-      <main className="px-6 space-y-6">
+      <main className="px-6 space-y-6 mt-4 md:mt-6">
         <Dashboard 
           balance={balance} 
           creditScore={creditScore} 
@@ -244,7 +265,7 @@ function App() {
         {/* Tab Content */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-gray-800">
+            <h2 className="text-lg font-bold text-gray-800 dark:text-gray-100">
               {activeTab === 'dashboard' ? 'Recent Transactions' : activeTab === 'analysis' ? 'Insights' : 'History'}
             </h2>
             
