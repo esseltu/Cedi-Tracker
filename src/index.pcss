@@ -4,28 +4,59 @@
 
 @layer base {
   body {
-    @apply bg-gradient-to-br from-gray-100 to-gray-200 min-h-screen text-gray-800 font-sans antialiased;
-    @apply dark:bg-gradient-to-br dark:from-gray-900 dark:to-gray-950 dark:text-gray-100;
+    font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif;
+    font-feature-settings: "ss01";
+    font-weight: 300;
+    @apply bg-[#f6f9fc] min-h-screen text-[#0d253d] antialiased;
+    @apply dark:bg-[#0b1329] dark:text-[#f6f9fc];
+  }
+}
+
+@layer utilities {
+  .font-tnum {
+    font-feature-settings: "tnum", "ss01";
+    letter-spacing: -0.42px;
   }
 }
 
 @layer components {
-  .glass-card {
-    @apply bg-white/40 backdrop-blur-md border border-white/50 shadow-lg rounded-2xl;
-    @apply dark:bg-white/5 dark:border-white/10;
-  }
-  
-  .glass-button {
-    @apply bg-primary/90 hover:bg-primary text-white backdrop-blur-sm shadow-md rounded-xl transition-all active:scale-95;
+  /* Stripe-inspired Card Components */
+  .stripe-card {
+    @apply bg-white border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,55,112,0.08)] rounded-xl;
+    @apply dark:bg-[#1c1e54] dark:border-white/10 dark:shadow-[0_8px_24px_rgba(0,0,0,0.3)];
   }
 
-  .glass-input {
-    @apply bg-white/50 border border-white/60 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 rounded-xl px-4 py-3 outline-none transition-all placeholder:text-gray-400;
-    @apply dark:bg-gray-800/60 dark:border-gray-700 dark:placeholder:text-gray-400;
+  .stripe-card-interactive {
+    @apply bg-white border border-[#e3e8ee] shadow-[0_1px_3px_rgba(0,55,112,0.08)] rounded-xl hover:border-[#533afd]/40 hover:shadow-[0_8px_24px_rgba(0,55,112,0.12)] transition-all cursor-pointer;
+    @apply dark:bg-[#1c1e54] dark:border-white/10 dark:hover:border-[#533afd]/60;
+  }
+
+  /* Stripe-style Pill Buttons */
+  .btn-stripe-primary {
+    @apply bg-[#533afd] hover:bg-[#4434d4] active:bg-[#2e2b8c] text-white text-sm font-normal py-2 px-4 rounded-full transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-stripe-secondary {
+    @apply bg-white border border-[#e3e8ee] hover:bg-[#f6f9fc] hover:border-[#a8c3de] text-[#0d253d] text-sm font-normal py-2 px-4 rounded-full transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply dark:bg-[#1c1e54] dark:border-white/15 dark:hover:bg-[#273951] dark:text-white;
+  }
+
+  .btn-stripe-danger {
+    @apply bg-white border border-[#ea2261]/30 hover:bg-[#ea2261]/10 text-[#ea2261] text-sm font-normal py-2 px-4 rounded-full transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed;
+    @apply dark:bg-[#1c1e54] dark:border-[#ea2261]/40 dark:hover:bg-[#ea2261]/20 dark:text-rose-400;
+  }
+
+  .btn-stripe-icon {
+    @apply w-9 h-9 flex items-center justify-center rounded-full bg-white border border-[#e3e8ee] text-[#273951] hover:bg-[#f6f9fc] hover:text-[#533afd] hover:border-[#a8c3de] transition-all shadow-sm;
+    @apply dark:bg-[#1c1e54] dark:border-white/15 dark:text-gray-300 dark:hover:bg-[#273951] dark:hover:text-white;
+  }
+
+  .glass-card {
+    @apply stripe-card;
   }
 }
 
-/* Custom Scrollbar for cleaner look */
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -33,6 +64,6 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.5);
+  background: #a8c3de;
   border-radius: 10px;
 }

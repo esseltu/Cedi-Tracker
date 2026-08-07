@@ -20,69 +20,76 @@ const IncomeSuggestionModal = ({ income, onClose }) => {
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+          className="absolute inset-0 bg-[#0d253d]/50 backdrop-blur-sm"
         />
         
-        {/* Modal */}
+        {/* Modal Container */}
         <motion.div 
-          initial={{ scale: 0.9, opacity: 0 }}
+          initial={{ scale: 0.95, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          className="relative bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm overflow-hidden"
+          exit={{ scale: 0.95, opacity: 0 }}
+          className="relative bg-white dark:bg-[#1c1e54] border border-[#e3e8ee] dark:border-gray-800 rounded-xl shadow-[0_8px_24px_rgba(0,55,112,0.16)] p-6 w-full max-w-sm overflow-hidden"
         >
-          {/* Decorative Background */}
-          <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-r from-emerald-500 to-teal-600"></div>
+          {/* Decorative Mesh Header */}
+          <div 
+            className="absolute top-0 left-0 w-full h-20"
+            style={{
+              background: 'linear-gradient(135deg, #1c1e54 0%, #0d253d 50%, #4434d4 100%)'
+            }}
+          />
           
           <button 
+            type="button"
             onClick={onClose} 
-            className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/30 rounded-full text-white transition-colors z-10"
+            className="absolute top-3 right-3 btn-stripe-icon !w-7 !h-7 !bg-white/20 !border-white/30 text-white z-10"
           >
-            <FaTimes size={14} />
+            <FaTimes size={12} />
           </button>
 
-          <div className="relative z-10 mt-4">
-            <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg mx-auto mb-4 border-4 border-emerald-100">
-              <FaMoneyBillWave className="text-3xl text-emerald-600" />
+          <div className="relative z-10 mt-3">
+            <div className="w-14 h-14 bg-white dark:bg-[#1c1e54] rounded-full flex items-center justify-center shadow-md mx-auto mb-3 border-2 border-[#533afd]/20">
+              <FaMoneyBillWave className="text-2xl text-[#533afd]" />
             </div>
 
-            <div className="text-center mb-6">
-              <h2 className="text-xl font-bold text-gray-800">Smart Income Split</h2>
-              <p className="text-sm text-gray-500">Based on the 50/30/20 Rule</p>
-              <p className="text-2xl font-bold text-emerald-600 mt-2">{formatCurrency(income.amount)}</p>
+            <div className="text-center mb-5">
+              <h2 className="text-lg font-light text-[#0d253d] dark:text-white tracking-tight">Smart Income Split</h2>
+              <p className="text-xs text-[#64748d] dark:text-gray-400 font-normal">Based on the 50/30/20 Rule</p>
+              <p className="text-2xl font-light text-[#533afd] dark:text-[#665efd] mt-1 font-tnum">{formatCurrency(income.amount)}</p>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {/* Needs */}
-              <div className="flex justify-between items-center p-3 bg-blue-50 rounded-xl border border-blue-100">
+              <div className="flex justify-between items-center p-3 bg-[#533afd]/5 dark:bg-[#533afd]/15 rounded-lg border border-[#533afd]/20">
                 <div>
-                  <p className="font-bold text-blue-800 text-sm">Needs (50%)</p>
-                  <p className="text-xs text-blue-600">Rent, Food, Bills</p>
+                  <p className="font-normal text-[#533afd] text-xs">Needs (50%)</p>
+                  <p className="text-[11px] text-[#64748d] dark:text-gray-400 font-normal">Rent, Food, Bills</p>
                 </div>
-                <span className="font-bold text-blue-700">{formatCurrency(needs)}</span>
+                <span className="font-normal text-[#533afd] font-tnum text-sm">{formatCurrency(needs)}</span>
               </div>
 
               {/* Wants */}
-              <div className="flex justify-between items-center p-3 bg-purple-50 rounded-xl border border-purple-100">
+              <div className="flex justify-between items-center p-3 bg-[#f96bee]/5 dark:bg-[#f96bee]/15 rounded-lg border border-[#f96bee]/20">
                 <div>
-                  <p className="font-bold text-purple-800 text-sm">Wants (30%)</p>
-                  <p className="text-xs text-purple-600">Shopping, Fun</p>
+                  <p className="font-normal text-[#f96bee] text-xs">Wants (30%)</p>
+                  <p className="text-[11px] text-[#64748d] dark:text-gray-400 font-normal">Shopping, Fun</p>
                 </div>
-                <span className="font-bold text-purple-700">{formatCurrency(wants)}</span>
+                <span className="font-normal text-[#f96bee] font-tnum text-sm">{formatCurrency(wants)}</span>
               </div>
 
               {/* Savings */}
-              <div className="flex justify-between items-center p-3 bg-emerald-50 rounded-xl border border-emerald-100">
+              <div className="flex justify-between items-center p-3 bg-[#059669]/5 dark:bg-[#059669]/15 rounded-lg border border-[#059669]/20">
                 <div>
-                  <p className="font-bold text-emerald-800 text-sm">Savings (20%)</p>
-                  <p className="text-xs text-emerald-600">Investments, Debt</p>
+                  <p className="font-normal text-[#059669] text-xs">Savings (20%)</p>
+                  <p className="text-[11px] text-[#64748d] dark:text-gray-400 font-normal">Investments, Debt</p>
                 </div>
-                <span className="font-bold text-emerald-700">{formatCurrency(savings)}</span>
+                <span className="font-normal text-[#059669] font-tnum text-sm">{formatCurrency(savings)}</span>
               </div>
             </div>
 
             <button 
+              type="button"
               onClick={onClose}
-              className="w-full mt-6 py-3 bg-gray-900 text-white rounded-xl font-semibold text-sm hover:bg-gray-800 transition-colors shadow-lg"
+              className="btn-stripe-primary w-full mt-5 py-2.5 text-xs font-normal"
             >
               Got it, thanks!
             </button>
