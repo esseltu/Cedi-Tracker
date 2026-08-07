@@ -11,7 +11,7 @@ import ClearTransactionsModal from './components/ClearTransactionsModal';
 import { exportTransactionsToPdf } from './utils/exportPdf';
 import { FaHistory, FaChartPie, FaSignOutAlt, FaMoon, FaSun, FaFilePdf, FaTrashAlt } from 'react-icons/fa';
 import { db, auth, googleProvider } from './firebase';
-import { collection, addDoc, onSnapshot, query, where, deleteDoc, doc, serverTimestamp, writeBatch } from 'firebase/firestore';
+import { collection, addDoc, onSnapshot, query, where, deleteDoc, updateDoc, doc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
 
 function App() {
@@ -189,6 +189,15 @@ function App() {
       console.error("Error deleting document: ", e);
       alert(`Failed to delete: ${e.message}`);
       setTransactions(originalTransactions);
+    }
+  };
+
+  const handleUpdateTransaction = async (id, updatedData) => {
+    try {
+      await updateDoc(doc(db, 'transactions', id), updatedData);
+    } catch (e) {
+      console.error("Error updating transaction: ", e);
+      alert(`Failed to update transaction: ${e.message}`);
     }
   };
 
@@ -414,7 +423,7 @@ function App() {
 
               {activeTab === 'dashboard' && (
                 <>
-                  <TransactionList transactions={filteredTransactions.slice(0, 7)} onDelete={handleDeleteTransaction} />
+                  <TransactionList transactions={filteredTransactions.slice(0, 7)} onDelete={handleDeleteTransaction} onUpdate={handleUpdateTransaction} />
                   {filteredTransactions.length > 7 && (
                     <button 
                       onClick={() => setActiveTab('history')} 
@@ -427,7 +436,7 @@ function App() {
               )}
 
               {activeTab === 'history' && (
-                <TransactionList transactions={filteredTransactions} onDelete={handleDeleteTransaction} />
+                <TransactionList transactions={filteredTransactions} onDelete={handleDeleteTransaction} onUpdate={handleUpdateTransaction} />
               )}
 
               {activeTab === 'analysis' && (

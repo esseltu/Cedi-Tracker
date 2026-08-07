@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaUtensils, FaBus, FaWifi, FaGamepad, FaPiggyBank, FaTag, FaTrash } from 'react-icons/fa';
+import { FaUtensils, FaBus, FaWifi, FaGamepad, FaPiggyBank, FaTag, FaTrash, FaMoneyBillWave, FaGift, FaBriefcase } from 'react-icons/fa';
 import { format } from 'date-fns';
 import { formatCurrency } from '../utils/currency';
+import TransactionDetailsModal from './TransactionDetailsModal';
 
 const categoryIcons = {
   'Food': FaUtensils,
@@ -10,10 +11,15 @@ const categoryIcons = {
   'Data/Airtime': FaWifi,
   'Entertainment': FaGamepad,
   'Savings/Invest': FaPiggyBank,
+  'Allowance': FaMoneyBillWave,
+  'Salary': FaBriefcase,
+  'Gift': FaGift,
   'Other': FaTag,
 };
 
-const TransactionList = ({ transactions, onDelete }) => {
+const TransactionList = ({ transactions, onDelete, onUpdate }) => {
+  const [selectedTransaction, setSelectedTransaction] = useState(null);
+
   if (transactions.length === 0) {
     return (
       <div className="stripe-card flex flex-col items-center justify-center py-12 px-4 text-center">
@@ -40,7 +46,8 @@ const TransactionList = ({ transactions, onDelete }) => {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: index * 0.03 }}
-              className="stripe-card p-3.5 flex items-center justify-between group"
+              onClick={() => setSelectedTransaction(t)}
+              className="stripe-card-interactive p-3.5 flex items-center justify-between group cursor-pointer"
             >
               <div className="flex items-center gap-3">
                 <div className={`w-9 h-9 rounded-full flex items-center justify-center ${
@@ -49,7 +56,7 @@ const TransactionList = ({ transactions, onDelete }) => {
                   <Icon className="text-xs" />
                 </div>
                 <div>
-                  <p className="font-normal text-[#0d253d] dark:text-gray-100 text-sm">{t.category}</p>
+                  <p className="font-normal text-[#0d253d] dark:text-gray-100 text-sm group-hover:text-[#533afd] transition-colors">{t.category}</p>
                   <p className="text-[11px] text-[#64748d] dark:text-gray-400 font-normal font-tnum">
                     {format(new Date(t.date), 'MMM d, yyyy')}
                   </p>
@@ -104,7 +111,8 @@ const TransactionList = ({ transactions, onDelete }) => {
                   initial={{ opacity: 0, y: 5 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.02 }}
-                  className="hover:bg-[#f6f9fc]/80 dark:hover:bg-gray-800/40 transition-colors group"
+                  onClick={() => setSelectedTransaction(t)}
+                  className="hover:bg-[#f6f9fc] dark:hover:bg-gray-800/60 transition-colors group cursor-pointer"
                 >
                   <td className="py-3 px-4">
                     <div className="flex items-center gap-3">
@@ -113,7 +121,7 @@ const TransactionList = ({ transactions, onDelete }) => {
                       }`}>
                         <Icon className="text-xs" />
                       </div>
-                      <span className="font-normal text-[#0d253d] dark:text-gray-100">{t.category}</span>
+                      <span className="font-normal text-[#0d253d] dark:text-gray-100 group-hover:text-[#533afd] transition-colors">{t.category}</span>
                     </div>
                   </td>
 
@@ -139,7 +147,8 @@ const TransactionList = ({ transactions, onDelete }) => {
                     {onDelete && (
                       <button 
                         type="button"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           if (window.confirm('Are you sure you want to delete this transaction?')) {
                             onDelete(t.id);
                           }
@@ -157,6 +166,16 @@ const TransactionList = ({ transactions, onDelete }) => {
           </tbody>
         </table>
       </div>
+
+      {/* Transaction Details Modal */}
+      {selectedTransaction && (
+        <TransactionDetailsModal
+          transaction={selectedTransaction}
+          onClose={() => setSelectedTransaction(null)}
+          onDelete={onDelete}
+          onUpdate={onUpdate}
+        />
+      )}
     </>
   );
 };
