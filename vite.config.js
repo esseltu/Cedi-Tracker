@@ -14,7 +14,8 @@ export default defineConfig({
         name: 'Cedi Tracker',
         short_name: 'CediTracker',
         description: 'Personal spending tracker in Ghana Cedis',
-        theme_color: '#ffffff',
+        theme_color: '#1c1e54',
+        background_color: '#1c1e54',
         icons: [
           {
             src: 'cedi-icon.svg',
