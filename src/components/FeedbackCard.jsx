@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { FaChartPie, FaLightbulb, FaShieldAlt, FaInfoCircle, FaWallet, FaArrowUp, FaArrowDown } from 'react-icons/fa';
+import { FaChartPie, FaLightbulb, FaInfoCircle, FaWallet, FaPiggyBank, FaCoins } from 'react-icons/fa';
 import { formatCurrency } from '../utils/currency';
 
 const COLORS = {
@@ -13,8 +13,8 @@ const COLORS = {
   'Other': '#64748d', // Stripe Mute Gray
 };
 
-const FeedbackCard = ({ transactions = [], balance = 0 }) => {
-  const analysis = useMemo(() => {
+export const useInsightsAnalysis = (transactions = [], balance = 0) => {
+  return useMemo(() => {
     const expenses = transactions.filter(t => t.type === 'expense');
     const incomes = transactions.filter(t => t.type === 'income');
 
@@ -101,30 +101,17 @@ const FeedbackCard = ({ transactions = [], balance = 0 }) => {
 
     return { totalSpent, totalIncome, chartData, advice, requestSuggestion, topCategoryName, topCategoryValue, topCategoryPct, dailyCap, todaysExpenses, todayPct, lastSavingsTx, health };
   }, [transactions, balance]);
+};
 
-  // FIX: Only trigger empty state if NO transactions exist at all!
-  if (transactions.length === 0) {
+/**
+ * SPENDING BREAKDOWN BENTO TILE (lg:col-span-3)
+ */
+export const SpendingBreakdownTile = ({ analysis, className = 'lg:col-span-3' }) => {
+  if (analysis.totalSpent > 0) {
     return (
-      <div className="stripe-card p-8 text-center flex flex-col items-center justify-center space-y-3">
-        <div className="w-12 h-12 rounded-full bg-[#f6f9fc] dark:bg-gray-800 text-[#533afd] border border-[#e3e8ee] dark:border-gray-700 flex items-center justify-center shadow-sm">
-          <FaChartPie className="text-xl opacity-80" />
-        </div>
-        <div className="space-y-1 max-w-sm">
-          <h3 className="text-base font-light text-[#0d253d] dark:text-white tracking-tight">No Financial Insights Yet</h3>
-          <p className="text-xs text-[#64748d] dark:text-gray-400 font-normal leading-relaxed">
-            Add your first income or expense transaction to generate spending charts, daily budget caps, and AI guidance.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* Spending Breakdown Chart (If expenses exist) */}
-      {analysis.totalSpent > 0 ? (
-        <div className="stripe-card p-6">
-          <div className="flex items-center justify-between mb-4">
+      <div className={`w-full ${className}`}>
+        <div className="stripe-card p-6 h-full flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-2">
             <h3 className="text-base font-light text-[#0d253d] dark:text-white tracking-tight">Spending Breakdown</h3>
             <span className="text-xs text-[#64748d] dark:text-gray-400 font-normal font-tnum">
               {analysis.chartData.length} Categories
@@ -175,7 +162,7 @@ const FeedbackCard = ({ transactions = [], balance = 0 }) => {
           </div>
 
           {/* Category Legend Grid */}
-          <div className="mt-4 pt-4 border-t border-[#e3e8ee] dark:border-gray-800 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs">
+          <div className="mt-3 pt-3 border-t border-[#e3e8ee] dark:border-gray-800 grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
             {analysis.chartData.map((item) => (
               <div key={item.name} className="flex items-center gap-2">
                 <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[item.name] || COLORS['Other'] }} />
@@ -187,97 +174,186 @@ const FeedbackCard = ({ transactions = [], balance = 0 }) => {
             ))}
           </div>
         </div>
-      ) : (
-        /* If only Income transactions exist */
-        <div className="stripe-card p-6 flex items-center gap-4">
-          <div className="w-10 h-10 rounded-full bg-[#533afd]/10 text-[#533afd] flex items-center justify-center shrink-0">
-            <FaWallet size={16} />
-          </div>
-          <div>
-            <h4 className="text-sm font-normal text-[#0d253d] dark:text-white">Income Logged</h4>
-            <p className="text-xs text-[#64748d] dark:text-gray-400 font-normal mt-0.5">
-              You have logged <strong className="text-[#533afd] font-tnum">{formatCurrency(analysis.totalIncome)}</strong> in income with 0 expenses. Add an expense to view category breakdowns.
-            </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className={`w-full ${className}`}>
+      <div className="stripe-card p-6 h-full flex items-center gap-4">
+        <div className="w-10 h-10 rounded-full bg-[#533afd]/10 text-[#533afd] flex items-center justify-center shrink-0">
+          <FaWallet size={16} />
+        </div>
+        <div>
+          <h4 className="text-sm font-normal text-[#0d253d] dark:text-white">Income Logged</h4>
+          <p className="text-xs text-[#64748d] dark:text-gray-400 font-normal mt-0.5">
+            You have logged <strong className="text-[#533afd] font-tnum">{formatCurrency(analysis.totalIncome)}</strong> in income with 0 expenses. Add an expense to view category breakdowns.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/**
+ * DAILY CAP BENTO TILE (lg:col-span-3)
+ */
+export const DailyCapTile = ({ dailyCap, className = 'lg:col-span-3' }) => {
+  return (
+    <div className={`w-full ${className}`}>
+      <motion.div 
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="stripe-card p-5 h-full flex flex-col justify-between"
+      >
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[10px] text-[#64748d] dark:text-gray-400 font-normal uppercase tracking-wider block">Daily Budget Cap</span>
+          <div className="w-7 h-7 rounded-full bg-[#533afd]/10 text-[#533afd] dark:bg-[#533afd]/20 dark:text-[#665efd] flex items-center justify-center">
+            <FaCoins size={12} />
           </div>
         </div>
-      )}
-
-      {/* AI Smart Guidance & Budget Metrics */}
-      <div className="stripe-card p-6 border-l-4 border-l-[#533afd]">
-        <div className="flex items-start justify-between gap-3 mb-4">
-          <div>
-            <h3 className="text-base font-light text-[#0d253d] dark:text-white tracking-tight">Smart Guidance</h3>
-            <p className="text-xs text-[#64748d] dark:text-gray-400 font-normal">Personalized budget insights</p>
-          </div>
-          <span className={`inline-block text-[11px] font-normal px-2.5 py-1 rounded-full border ${analysis.health.className}`}>
-            {analysis.health.label}
-          </span>
+        <div>
+          <p className="text-2xl font-light font-tnum text-[#0d253d] dark:text-white mt-1">
+            {dailyCap > 0 ? formatCurrency(dailyCap) : '—'}
+          </p>
+          <p className="text-[11px] text-[#64748d] dark:text-gray-400 font-normal mt-1">
+            Calculated daily safe spending limit
+          </p>
         </div>
+      </motion.div>
+    </div>
+  );
+};
 
-        {/* Metric Badges */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <div className="p-3 rounded-lg bg-[#f6f9fc] dark:bg-gray-800/50 border border-[#e3e8ee] dark:border-gray-700">
-            <p className="text-[10px] text-[#64748d] dark:text-gray-400 font-normal uppercase tracking-wider">Daily Cap</p>
-            <p className="text-base font-normal font-tnum text-[#0d253d] dark:text-white mt-0.5">
-              {analysis.dailyCap > 0 ? formatCurrency(analysis.dailyCap) : '—'}
-            </p>
-          </div>
-          <div className="p-3 rounded-lg bg-[#f6f9fc] dark:bg-gray-800/50 border border-[#e3e8ee] dark:border-gray-700">
-            <p className="text-[10px] text-[#64748d] dark:text-gray-400 font-normal uppercase tracking-wider">Last Saved</p>
-            <p className="text-base font-normal font-tnum text-[#0d253d] dark:text-white mt-0.5">
-              {analysis.lastSavingsTx ? formatCurrency(analysis.lastSavingsTx.amount) : '—'}
-            </p>
-          </div>
-        </div>
-
-        {/* Today's Cap Progress */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between text-xs text-[#64748d] dark:text-gray-400 mb-1.5 font-tnum">
-            <span>Today's Spending</span>
-            <span>{formatCurrency(analysis.todaysExpenses)} / {analysis.dailyCap > 0 ? formatCurrency(analysis.dailyCap) : '—'}</span>
-          </div>
-          <div className="w-full h-2 bg-[#e3e8ee] dark:bg-gray-700 rounded-full overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all duration-300 ${
-                analysis.todaysExpenses > analysis.dailyCap && analysis.dailyCap > 0 ? 'bg-[#ea2261]' : 'bg-[#533afd]'
-              }`}
-              style={{ width: `${analysis.todayPct}%` }}
-            />
+/**
+ * LAST SAVED BENTO TILE (lg:col-span-3)
+ */
+export const LastSavedTile = ({ lastSavingsTx, className = 'lg:col-span-3' }) => {
+  return (
+    <div className={`w-full ${className}`}>
+      <motion.div 
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="stripe-card p-5 h-full flex flex-col justify-between"
+      >
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[10px] text-[#64748d] dark:text-gray-400 font-normal uppercase tracking-wider block">Last Saved</span>
+          <div className="w-7 h-7 rounded-full bg-[#059669]/10 text-[#059669] dark:bg-[#059669]/20 dark:text-[#34d399] flex items-center justify-center">
+            <FaPiggyBank size={12} />
           </div>
         </div>
+        <div>
+          <p className="text-2xl font-light font-tnum text-[#059669] dark:text-[#34d399] mt-1">
+            {lastSavingsTx ? formatCurrency(lastSavingsTx.amount) : '—'}
+          </p>
+          <p className="text-[11px] text-[#64748d] dark:text-gray-400 font-normal mt-1 truncate">
+            {lastSavingsTx ? `Logged on ${lastSavingsTx.date}` : 'No savings logged yet'}
+          </p>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
 
-        {/* Tips List */}
-        <div className="space-y-2">
-          {analysis.advice.length > 0 ? (
-            analysis.advice.map((tip, idx) => (
-              <div key={idx} className="flex items-start gap-2.5 p-3 rounded-lg bg-[#f6f9fc] dark:bg-gray-800/40 border border-[#e3e8ee] dark:border-gray-700/60">
-                <span className="mt-1 w-2 h-2 rounded-full bg-[#533afd] shrink-0" />
-                <p className="text-xs text-[#0d253d] dark:text-gray-200 leading-snug font-normal">{tip}</p>
-              </div>
-            ))
-          ) : (
-            <div className="flex items-start gap-2.5 p-3 rounded-lg bg-[#f6f9fc] dark:bg-gray-800/40 border border-[#e3e8ee] dark:border-gray-700/60">
-              <FaInfoCircle className="mt-0.5 text-[#533afd] text-xs shrink-0" />
-              <p className="text-xs text-[#0d253d] dark:text-gray-200 leading-snug font-normal">Spending is balanced. Keep up the good habits!</p>
+/**
+ * SMART GUIDANCE BENTO TILE (Full width - lg:col-span-6)
+ */
+export const SmartGuidanceTile = ({ analysis, className = 'lg:col-span-6' }) => {
+  return (
+    <div className={`w-full ${className}`}>
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="stripe-card p-6 h-full flex flex-col justify-between border-l-4 border-l-[#533afd]"
+      >
+        <div>
+          <div className="flex items-start justify-between gap-3 mb-4">
+            <div>
+              <h3 className="text-base font-light text-[#0d253d] dark:text-white tracking-tight">Smart Guidance</h3>
+              <p className="text-xs text-[#64748d] dark:text-gray-400 font-normal">Personalized budget insights</p>
             </div>
-          )}
+            <span className={`inline-block text-[11px] font-normal px-2.5 py-1 rounded-full border ${analysis.health.className}`}>
+              {analysis.health.label}
+            </span>
+          </div>
+
+          {/* Today's Cap Progress */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between text-xs text-[#64748d] dark:text-gray-400 mb-1.5 font-tnum">
+              <span>Today's Spending</span>
+              <span>{formatCurrency(analysis.todaysExpenses)} / {analysis.dailyCap > 0 ? formatCurrency(analysis.dailyCap) : '—'}</span>
+            </div>
+            <div className="w-full h-2 bg-[#e3e8ee] dark:bg-gray-700 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all duration-300 ${
+                  analysis.todaysExpenses > analysis.dailyCap && analysis.dailyCap > 0 ? 'bg-[#ea2261]' : 'bg-[#533afd]'
+                }`}
+                style={{ width: `${analysis.todayPct}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Tips List */}
+          <div className="space-y-2">
+            {analysis.advice.length > 0 ? (
+              analysis.advice.map((tip, idx) => (
+                <div key={idx} className="flex items-start gap-2.5 p-3 rounded-lg bg-[#f6f9fc] dark:bg-gray-800/40 border border-[#e3e8ee] dark:border-gray-700/60">
+                  <span className="mt-1 w-2 h-2 rounded-full bg-[#533afd] shrink-0" />
+                  <p className="text-xs text-[#0d253d] dark:text-gray-200 leading-snug font-normal">{tip}</p>
+                </div>
+              ))
+            ) : (
+              <div className="flex items-start gap-2.5 p-3 rounded-lg bg-[#f6f9fc] dark:bg-gray-800/40 border border-[#e3e8ee] dark:border-gray-700/60">
+                <FaInfoCircle className="mt-0.5 text-[#533afd] text-xs shrink-0" />
+                <p className="text-xs text-[#0d253d] dark:text-gray-200 leading-snug font-normal">Spending is balanced. Keep up the good habits!</p>
+              </div>
+            )}
+          </div>
         </div>
 
         {analysis.requestSuggestion && (
-          <motion.div 
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mt-4 p-3.5 bg-[#533afd]/5 dark:bg-[#533afd]/15 rounded-lg border border-[#533afd]/20"
-          >
+          <div className="mt-4 p-3.5 bg-[#533afd]/5 dark:bg-[#533afd]/15 rounded-lg border border-[#533afd]/20">
             <div className="flex items-center gap-1.5 text-xs text-[#533afd] dark:text-[#665efd] font-normal mb-1">
               <FaLightbulb size={12} />
               <span>Smart Recommendation</span>
             </div>
             <p className="text-xs text-[#0d253d] dark:text-gray-200 leading-relaxed font-normal">{analysis.requestSuggestion}</p>
-          </motion.div>
+          </div>
         )}
-      </div>
+      </motion.div>
     </div>
+  );
+};
+
+/**
+ * DEFAULT FEEDBACK CARD (Insights View wrapper)
+ */
+const FeedbackCard = ({ transactions = [], balance = 0 }) => {
+  const analysis = useInsightsAnalysis(transactions, balance);
+
+  if (transactions.length === 0) {
+    return (
+      <div className="stripe-card p-8 text-center flex flex-col items-center justify-center space-y-3 lg:col-span-6">
+        <div className="w-12 h-12 rounded-full bg-[#f6f9fc] dark:bg-gray-800 text-[#533afd] border border-[#e3e8ee] dark:border-gray-700 flex items-center justify-center shadow-sm">
+          <FaChartPie className="text-xl opacity-80" />
+        </div>
+        <div className="space-y-1 max-w-sm">
+          <h3 className="text-base font-light text-[#0d253d] dark:text-white tracking-tight">No Financial Insights Yet</h3>
+          <p className="text-xs text-[#64748d] dark:text-gray-400 font-normal leading-relaxed">
+            Add your first income or expense transaction to generate spending charts, daily budget caps, and AI guidance.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <SpendingBreakdownTile analysis={analysis} className="lg:col-span-3" />
+      <DailyCapTile dailyCap={analysis.dailyCap} className="lg:col-span-3" />
+      <LastSavedTile lastSavingsTx={analysis.lastSavingsTx} className="lg:col-span-3" />
+      <SmartGuidanceTile analysis={analysis} className="lg:col-span-6" />
+    </>
   );
 };
 

@@ -1,10 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import SplashScreen from './components/SplashScreen';
-import Dashboard, { DashboardSidebarWidgets } from './components/Dashboard';
+import Dashboard, { 
+  CediCardTile, 
+  CreditScoreTile, 
+  AddTransactionTile, 
+  TotalIncomeTile, 
+  TotalExpensesTile, 
+  LowFundsBannerTile 
+} from './components/Dashboard';
 import AddTransaction from './components/AddTransaction';
 import TransactionList from './components/TransactionList';
-import FeedbackCard from './components/FeedbackCard';
+import FeedbackCard, { 
+  useInsightsAnalysis, 
+  SpendingBreakdownTile, 
+  DailyCapTile, 
+  LastSavedTile, 
+  SmartGuidanceTile 
+} from './components/FeedbackCard';
 import Login from './components/Login';
 import IncomeSuggestionModal from './components/IncomeSuggestionModal';
 import ClearTransactionsModal from './components/ClearTransactionsModal';
@@ -62,6 +75,18 @@ function App() {
     }, 0);
   }, [transactions]);
 
+  const totalIncome = React.useMemo(() => {
+    return transactions
+      .filter(t => t.type === 'income')
+      .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+  }, [transactions]);
+
+  const totalExpenses = React.useMemo(() => {
+    return transactions
+      .filter(t => t.type === 'expense')
+      .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+  }, [transactions]);
+
   const creditScore = React.useMemo(() => {
     let score = 500;
     transactions.forEach(t => {
@@ -83,6 +108,8 @@ function App() {
     });
     return Math.max(300, Math.min(850, score));
   }, [transactions]);
+
+  const insightsAnalysis = useInsightsAnalysis(transactions, balance);
 
   // Auth Listener
   useEffect(() => {
@@ -260,10 +287,19 @@ function App() {
     return <Login onLogin={handleLogin} />;
   }
 
+  // Persistent Credit Score Tile (mounted once at App level)
+  const persistentCreditScoreTile = (
+    <CreditScoreTile 
+      key="persistent-credit-score-tile"
+      creditScore={creditScore} 
+      className={activeTab === 'history' ? 'lg:col-span-2' : 'lg:col-span-3'} 
+    />
+  );
+
   return (
     <div className="min-h-screen pb-24 max-w-md lg:max-w-[1200px] mx-auto relative px-4 sm:px-6 lg:px-8 lg:py-6">
-      {/* 1. Top Bar - Spans full 1200px container width with matching gutters */}
-      <header className="pt-6 lg:pt-0 pb-4 flex justify-between items-center sticky top-0 z-30 bg-[#f6f9fc]/90 dark:bg-[#0b1329]/90 backdrop-blur-md mb-2 lg:mb-8 border-b border-[#e3e8ee] dark:border-gray-800">
+      {/* Top Bar */}
+      <header className="pt-6 lg:pt-0 pb-4 flex justify-between items-center sticky top-0 z-30 bg-[#f6f9fc]/90 dark:bg-[#0b1329]/90 backdrop-blur-md mb-4 lg:mb-8 border-b border-[#e3e8ee] dark:border-gray-800">
         <div>
           <h1 className="text-xl lg:text-2xl font-light text-[#0d253d] dark:text-white tracking-tight">
             Cedi Tracker
@@ -273,7 +309,7 @@ function App() {
           </p>
         </div>
 
-        {/* Desktop Header Navigation Tabs (Stripe Segmented Controls) */}
+        {/* Navigation Tabs (Stripe Segmented Controls) */}
         <div className="hidden lg:flex items-center gap-1 bg-[#e3e8ee]/60 dark:bg-gray-800/80 p-1 rounded-full border border-[#e3e8ee] dark:border-gray-700">
           <button
             onClick={() => setActiveTab('dashboard')}
@@ -307,7 +343,7 @@ function App() {
           </button>
         </div>
 
-        {/* User Profile & Stripe-style Icon Buttons */}
+        {/* User Profile & Theme Toggle */}
         <div className="flex items-center gap-2.5">
           <button type="button" onClick={toggleTheme} className="btn-stripe-icon" aria-label="Toggle theme" title="Toggle Theme">
             {theme === 'dark' ? <FaSun size={14} /> : <FaMoon size={14} />}
@@ -327,56 +363,64 @@ function App() {
         </div>
       </header>
 
-      {/* Main Responsive CSS Grid Layout (Left 8-cols ~67% / Right 4-cols ~33% sticky sidebar) */}
+      {/* Main Bento Grid Mosaic Container */}
       <main>
-        <div className="grid grid-cols-1 lg:grid-cols-12 lg:gap-8 items-start">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4 lg:gap-6 items-stretch">
           
-          {/* Left Column (~67% width): Cedi Card, Low Funds banner, Recent Transactions */}
-          <div className="lg:col-span-8 space-y-6 w-full">
-            <Dashboard 
-              balance={balance} 
-              creditScore={creditScore} 
-              transactions={transactions}
-              cardHolder={user?.displayName || 'YOU'}
-              onAddClick={() => setShowAddModal(true)} 
-            />
-
-            {/* Mobile-only Sidebar Widgets */}
-            <div className="lg:hidden space-y-4">
-              <DashboardSidebarWidgets 
-                creditScore={creditScore} 
-                onAddClick={() => setShowAddModal(true)} 
+          {/* DASHBOARD TAB BENTO MOSAIC */}
+          {activeTab === 'dashboard' && (
+            <>
+              {/* Row 1: Cedi Card Hero Tile (3 cols) | Credit Score (3 cols) - Equal 50/50 split */}
+              <CediCardTile 
+                balance={balance} 
+                cardHolder={user?.displayName || 'YOU'} 
+                className="lg:col-span-3" 
               />
-            </div>
+              {persistentCreditScoreTile}
 
-            {/* Recent Transactions Section */}
-            <div className="space-y-4 pt-2">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-light text-[#0d253d] dark:text-white tracking-tight">
-                  {activeTab === 'dashboard' ? 'Recent Transactions' : activeTab === 'analysis' ? 'Financial Insights' : 'Transaction History'}
-                </h2>
-                
-                {/* Stripe-style Icon Buttons for View Toggle (Mobile) */}
-                <div className="flex lg:hidden items-center gap-1.5">
-                  <button 
-                    onClick={() => setActiveTab('dashboard')}
-                    className={`btn-stripe-icon ${activeTab === 'dashboard' ? '!bg-[#533afd] !text-white !border-[#533afd]' : ''}`}
-                    title="Transaction View"
-                  >
-                    <FaHistory size={13} />
-                  </button>
-                  <button 
-                    onClick={() => setActiveTab('analysis')}
-                    className={`btn-stripe-icon ${activeTab === 'analysis' ? '!bg-[#533afd] !text-white !border-[#533afd]' : ''}`}
-                    title="Insights View"
-                  >
-                    <FaChartPie size={13} />
-                  </button>
+              {/* Row 2: Add Transaction (2 cols) | Total Income (2 cols) | Total Expenses (2 cols) */}
+              <AddTransactionTile 
+                onAddClick={() => setShowAddModal(true)} 
+                className="lg:col-span-2" 
+              />
+              <TotalIncomeTile totalIncome={totalIncome} className="lg:col-span-2" />
+              <TotalExpensesTile totalExpenses={totalExpenses} className="lg:col-span-2" />
+
+              {/* Row 3: Low Funds Warning Banner Tile (Full 6 cols) */}
+              <LowFundsBannerTile 
+                balance={balance} 
+                creditScore={creditScore} 
+                transactions={transactions} 
+                className="lg:col-span-6" 
+              />
+
+              {/* Row 4: Recent Transactions Table Tile (Full 6 cols) */}
+              <div className="lg:col-span-6 space-y-4 pt-2">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-light text-[#0d253d] dark:text-white tracking-tight">
+                    Recent Transactions
+                  </h2>
+
+                  {/* Mobile Tab Toggle Buttons */}
+                  <div className="flex lg:hidden items-center gap-1.5">
+                    <button 
+                      onClick={() => setActiveTab('history')}
+                      className="btn-stripe-icon"
+                      title="History View"
+                    >
+                      <FaHistory size={13} />
+                    </button>
+                    <button 
+                      onClick={() => setActiveTab('analysis')}
+                      className="btn-stripe-icon"
+                      title="Insights View"
+                    >
+                      <FaChartPie size={13} />
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              {/* Stripe Segmented Filter Pills & Buttons */}
-              {(activeTab === 'dashboard' || activeTab === 'history') && (
+                {/* Filter Pills & Secondary Actions */}
                 <div className="flex items-center justify-between gap-2 flex-wrap">
                   <div className="flex gap-1.5 p-1 bg-[#e3e8ee]/50 dark:bg-gray-800/60 rounded-full border border-[#e3e8ee] dark:border-gray-700">
                     {['all', 'expense', 'income'].map((type) => (
@@ -394,7 +438,6 @@ function App() {
                     ))}
                   </div>
 
-                  {/* Stripe Secondary PDF & Destructive Clear Buttons */}
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
@@ -419,66 +462,110 @@ function App() {
                     </button>
                   </div>
                 </div>
-              )}
 
-              {activeTab === 'dashboard' && (
-                <>
-                  <TransactionList transactions={filteredTransactions.slice(0, 7)} onDelete={handleDeleteTransaction} onUpdate={handleUpdateTransaction} />
-                  {filteredTransactions.length > 7 && (
-                    <button 
-                      onClick={() => setActiveTab('history')} 
-                      className="w-full py-2.5 text-xs font-normal text-center text-[#533afd] dark:text-[#665efd] hover:underline cursor-pointer"
-                    >
-                      View All History ({filteredTransactions.length} items) →
-                    </button>
-                  )}
-                </>
-              )}
+                {/* Table Content */}
+                <TransactionList 
+                  transactions={filteredTransactions.slice(0, 7)} 
+                  onDelete={handleDeleteTransaction} 
+                  onUpdate={handleUpdateTransaction} 
+                />
 
-              {activeTab === 'history' && (
-                <TransactionList transactions={filteredTransactions} onDelete={handleDeleteTransaction} onUpdate={handleUpdateTransaction} />
-              )}
-
-              {activeTab === 'analysis' && (
-                <FeedbackCard transactions={transactions} balance={balance} />
-              )}
-            </div>
-          </div>
-
-          {/* Right Column Sidebar on Desktop (~33% width sticky sidebar) */}
-          <div className="hidden lg:block lg:col-span-4 space-y-6 sticky top-24 w-full">
-            <h3 className="text-xs font-normal text-[#64748d] uppercase tracking-widest">
-              Account Overview
-            </h3>
-
-            {/* Desktop Credit Score & Add Transaction Widgets */}
-            <DashboardSidebarWidgets 
-              creditScore={creditScore} 
-              onAddClick={() => setShowAddModal(true)} 
-            />
-
-            {/* Desktop Financial Summary Widget - Stripe card-feature-light */}
-            <div className="stripe-card p-5 space-y-3">
-              <h4 className="text-xs font-normal text-[#64748d] uppercase tracking-wider">
-                Financial Summary
-              </h4>
-              
-              <div className="grid grid-cols-2 gap-3 text-center">
-                <div className="p-3 rounded-lg bg-[#533afd]/5 dark:bg-[#533afd]/15 border border-[#533afd]/20">
-                  <p className="text-[10px] text-[#533afd] dark:text-[#665efd] font-normal uppercase tracking-wider">Total Income</p>
-                  <p className="text-base font-normal font-tnum text-[#533afd] dark:text-[#665efd] mt-0.5">
-                    GH₵ {transactions.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0).toLocaleString()}
-                  </p>
-                </div>
-                <div className="p-3 rounded-lg bg-[#ea2261]/5 dark:bg-[#ea2261]/15 border border-[#ea2261]/20">
-                  <p className="text-[10px] text-[#ea2261] dark:text-[#f96bee] font-normal uppercase tracking-wider">Total Expenses</p>
-                  <p className="text-base font-normal font-tnum text-[#ea2261] dark:text-[#f96bee] mt-0.5">
-                    GH₵ {transactions.filter(t => t.type === 'expense').reduce((s, t) => s + t.amount, 0).toLocaleString()}
-                  </p>
-                </div>
+                {filteredTransactions.length > 7 && (
+                  <button 
+                    onClick={() => setActiveTab('history')} 
+                    className="w-full py-2.5 text-xs font-normal text-center text-[#533afd] dark:text-[#665efd] hover:underline cursor-pointer"
+                  >
+                    View All History ({filteredTransactions.length} items) →
+                  </button>
+                )}
               </div>
-            </div>
-          </div>
+            </>
+          )}
+
+          {/* INSIGHTS TAB BENTO MOSAIC */}
+          {activeTab === 'analysis' && (
+            <>
+              {/* Row 1: Spending Breakdown Donut Chart (3 cols) | Persistent Credit Score (3 cols) */}
+              <SpendingBreakdownTile analysis={insightsAnalysis} className="lg:col-span-3" />
+              {persistentCreditScoreTile}
+
+              {/* Row 2: Daily Cap Tile (3 cols) | Last Saved Tile (3 cols) */}
+              <DailyCapTile dailyCap={insightsAnalysis.dailyCap} className="lg:col-span-3" />
+              <LastSavedTile lastSavingsTx={insightsAnalysis.lastSavingsTx} className="lg:col-span-3" />
+
+              {/* Row 3: Smart Guidance (Full 6 cols - Add Transaction tile omitted) */}
+              <SmartGuidanceTile analysis={insightsAnalysis} className="lg:col-span-6" />
+            </>
+          )}
+
+          {/* HISTORY TAB BENTO MOSAIC */}
+          {activeTab === 'history' && (
+            <>
+              {/* Row 1: Persistent Credit Score (2 cols) | Total Income (2 cols) | Total Expenses (2 cols) */}
+              {persistentCreditScoreTile}
+              <TotalIncomeTile totalIncome={totalIncome} className="lg:col-span-2" />
+              <TotalExpensesTile totalExpenses={totalExpenses} className="lg:col-span-2" />
+
+              {/* Row 2: Full Transaction History Table (Full 6 cols - Add Transaction tile omitted) */}
+              <div className="lg:col-span-6 space-y-4 pt-2">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-light text-[#0d253d] dark:text-white tracking-tight">
+                    Transaction History
+                  </h2>
+                </div>
+
+                {/* Filter Pills & Secondary Actions */}
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex gap-1.5 p-1 bg-[#e3e8ee]/50 dark:bg-gray-800/60 rounded-full border border-[#e3e8ee] dark:border-gray-700">
+                    {['all', 'expense', 'income'].map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => setFilterType(type)}
+                        className={`px-3.5 py-1 text-xs font-normal rounded-full capitalize transition-all cursor-pointer ${
+                          filterType === type 
+                            ? 'bg-[#533afd] text-white shadow-sm' 
+                            : 'text-[#64748d] dark:text-gray-400 hover:text-[#0d253d]'
+                        }`}
+                      >
+                        {type}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleExportPdf}
+                      disabled={transactions.length === 0}
+                      className="btn-stripe-secondary text-xs !py-1.5 !px-3"
+                      title="Export Transactions as PDF"
+                    >
+                      <FaFilePdf size={12} />
+                      <span>PDF</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowClearModal(true)}
+                      disabled={transactions.length === 0}
+                      className="btn-stripe-danger text-xs !py-1.5 !px-3"
+                      title="Clear All Transactions"
+                    >
+                      <FaTrashAlt size={11} />
+                      <span>Clear</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Full History Table */}
+                <TransactionList 
+                  transactions={filteredTransactions} 
+                  onDelete={handleDeleteTransaction} 
+                  onUpdate={handleUpdateTransaction} 
+                />
+              </div>
+            </>
+          )}
 
         </div>
       </main>
