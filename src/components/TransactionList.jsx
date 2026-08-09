@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FaUtensils, FaBus, FaWifi, FaGamepad, FaPiggyBank, FaTag, FaTrash, FaMoneyBillWave, FaGift, FaBriefcase } from 'react-icons/fa';
+import { FaUtensils, FaBus, FaWifi, FaGamepad, FaPiggyBank, FaTag, FaTrash, FaMoneyBillWave, FaGift, FaBriefcase, FaInbox, FaWallet, FaReceipt, FaRedo } from 'react-icons/fa';
 import { format } from 'date-fns';
 import { formatCurrency } from '../utils/currency';
 import TransactionDetailsModal from './TransactionDetailsModal';
@@ -17,17 +17,65 @@ const categoryIcons = {
   'Other': FaTag,
 };
 
-const TransactionList = ({ transactions, onDelete, onUpdate }) => {
+const TransactionList = ({ transactions, onDelete, onUpdate, isLoading = false, filterType = 'all' }) => {
   const [selectedTransaction, setSelectedTransaction] = useState(null);
 
-  if (transactions.length === 0) {
+  // 1. Loading Skeleton State
+  if (isLoading) {
     return (
-      <div className="stripe-card flex flex-col items-center justify-center py-12 px-4 text-center">
-        <div className="w-12 h-12 rounded-full bg-[#f6f9fc] dark:bg-gray-800 text-[#64748d] flex items-center justify-center mb-3 border border-[#e3e8ee] dark:border-gray-700">
-          <FaTag className="text-lg opacity-60" />
+      <div className="stripe-card p-4 space-y-3 animate-pulse">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="flex items-center justify-between py-2 border-b border-[#e3e8ee] dark:border-gray-800 last:border-0">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-[#e3e8ee] dark:bg-gray-700/70 shrink-0" />
+              <div className="space-y-1.5">
+                <div className="w-24 h-3 bg-[#e3e8ee] dark:bg-gray-700/70 rounded" />
+                <div className="w-16 h-2 bg-[#e3e8ee] dark:bg-gray-700/70 rounded" />
+              </div>
+            </div>
+            <div className="w-20 h-4 bg-[#e3e8ee] dark:bg-gray-700/70 rounded" />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  // 2. Empty State Handling (Contextual based on filter type)
+  if (transactions.length === 0) {
+    const getEmptyStateContent = () => {
+      if (filterType === 'expense') {
+        return {
+          icon: FaReceipt,
+          title: "No Expense Transactions Found",
+          subtitle: "You haven't recorded any expenses under this view yet."
+        };
+      }
+      if (filterType === 'income') {
+        return {
+          icon: FaWallet,
+          title: "No Income Transactions Found",
+          subtitle: "You haven't recorded any income entries yet."
+        };
+      }
+      return {
+        icon: FaInbox,
+        title: "No Transactions Recorded Yet",
+        subtitle: "Click 'Add New Transaction' above to start logging your cash flow."
+      };
+    };
+
+    const emptyContent = getEmptyStateContent();
+    const EmptyIcon = emptyContent.icon;
+
+    return (
+      <div className="stripe-card flex flex-col items-center justify-center py-12 px-6 text-center space-y-3">
+        <div className="w-12 h-12 rounded-full bg-[#f6f9fc] dark:bg-gray-800 text-[#533afd] flex items-center justify-center border border-[#e3e8ee] dark:border-gray-700 shadow-sm">
+          <EmptyIcon className="text-lg opacity-80" />
         </div>
-        <p className="text-sm font-normal text-[#0d253d] dark:text-gray-200 mb-1">No transactions recorded yet</p>
-        <p className="text-xs text-[#64748d] dark:text-gray-400">Click "Add New Transaction" above to start logging.</p>
+        <div className="space-y-1 max-w-sm">
+          <h3 className="text-sm font-light text-[#0d253d] dark:text-white tracking-tight">{emptyContent.title}</h3>
+          <p className="text-xs text-[#64748d] dark:text-gray-400 font-normal leading-relaxed">{emptyContent.subtitle}</p>
+        </div>
       </div>
     );
   }
@@ -56,7 +104,14 @@ const TransactionList = ({ transactions, onDelete, onUpdate }) => {
                   <Icon className="text-xs" />
                 </div>
                 <div>
-                  <p className="font-normal text-[#0d253d] dark:text-gray-100 text-sm group-hover:text-[#533afd] transition-colors">{t.category}</p>
+                  <div className="flex items-center gap-1.5">
+                    <p className="font-normal text-[#0d253d] dark:text-gray-100 text-sm group-hover:text-[#533afd] transition-colors">{t.category}</p>
+                    {t.isRecurring && (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-normal bg-[#533afd]/10 text-[#533afd] dark:bg-[#533afd]/20 dark:text-[#665efd]" title="Recurring Monthly">
+                        <FaRedo size={7} /> Monthly
+                      </span>
+                    )}
+                  </div>
                   <p className="text-[11px] text-[#64748d] dark:text-gray-400 font-normal font-tnum">
                     {format(new Date(t.date), 'MMM d, yyyy')}
                   </p>
@@ -121,7 +176,14 @@ const TransactionList = ({ transactions, onDelete, onUpdate }) => {
                       }`}>
                         <Icon className="text-xs" />
                       </div>
-                      <span className="font-normal text-[#0d253d] dark:text-gray-100 group-hover:text-[#533afd] transition-colors">{t.category}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-normal text-[#0d253d] dark:text-gray-100 group-hover:text-[#533afd] transition-colors">{t.category}</span>
+                        {t.isRecurring && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-normal bg-[#533afd]/10 text-[#533afd] dark:bg-[#533afd]/20 dark:text-[#665efd]" title="Recurring Monthly">
+                            <FaRedo size={8} /> Monthly
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </td>
 

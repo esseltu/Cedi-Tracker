@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaUtensils, FaBus, FaWifi, FaGamepad, FaPiggyBank, FaTag, FaTimes, FaMoneyBillWave, FaGift, FaBriefcase } from 'react-icons/fa';
+import { FaUtensils, FaBus, FaWifi, FaGamepad, FaPiggyBank, FaTag, FaTimes, FaMoneyBillWave, FaGift, FaBriefcase, FaExclamationCircle, FaRedo } from 'react-icons/fa';
 
 const expenseCategories = [
   { id: 'Food', label: 'Food', icon: FaUtensils, color: 'text-amber-500' },
@@ -24,26 +24,53 @@ const AddTransaction = ({ isOpen, onClose, onAdd }) => {
   const [category, setCategory] = useState(expenseCategories[0].id);
   const [note, setNote] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
 
   const categories = type === 'expense' ? expenseCategories : incomeCategories;
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!amount) return;
+    if (isSubmitting) return;
 
-    onAdd({
-      amount: parseFloat(amount),
-      category,
-      note,
-      date,
-      type: type
-    });
-    
-    // Reset and close
-    setAmount('');
-    setNote('');
-    setType('expense');
-    setCategory(expenseCategories[0].id);
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      setError('Please enter a valid amount greater than GH₵0.00');
+      return;
+    }
+
+    setError('');
+    setIsSubmitting(true);
+
+    try {
+      await onAdd({
+        amount: parsedAmount,
+        category,
+        note: note.trim(),
+        date,
+        type,
+        isRecurring
+      });
+      
+      // Reset and close
+      setAmount('');
+      setNote('');
+      setType('expense');
+      setCategory(expenseCategories[0].id);
+      setIsRecurring(false);
+      onClose();
+    } catch (err) {
+      console.error("Failed to add transaction:", err);
+      setError("Failed to save transaction. Check your internet connection.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleClose = () => {
+    if (isSubmitting) return;
+    setError('');
     onClose();
   };
 
@@ -56,17 +83,17 @@ const AddTransaction = ({ isOpen, onClose, onAdd }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            onClick={onClose}
+            onClick={handleClose}
             className="absolute inset-0 bg-[#0d253d]/50 backdrop-blur-sm pointer-events-auto"
           />
           
-          {/* Modal Container - DESIGN.md Card Surface & Elevation */}
+          {/* Modal Container */}
           <motion.div 
             initial={{ y: "100%" }}
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 26, stiffness: 320 }}
-            className="w-full sm:w-[420px] bg-white dark:bg-[#1c1e54] border-t sm:border border-[#e3e8ee] dark:border-gray-800 rounded-t-2xl sm:rounded-xl shadow-[0_8px_24px_rgba(0,55,112,0.16)] p-6 pointer-events-auto relative overflow-hidden"
+            className="w-full sm:w-[420px] bg-white dark:bg-[#1c1e54] border-t sm:border border-[#e3e8ee] dark:border-gray-800 rounded-t-2xl sm:rounded-xl shadow-[0_8px_24px_rgba(0,55,112,0.16)] p-6 pointer-events-auto relative overflow-hidden max-h-[90vh] overflow-y-auto"
           >
             {/* Header */}
             <div className="flex justify-between items-center mb-5">
@@ -76,19 +103,29 @@ const AddTransaction = ({ isOpen, onClose, onAdd }) => {
               </div>
               <button 
                 type="button"
-                onClick={onClose} 
-                className="btn-stripe-icon !w-8 !h-8"
+                onClick={handleClose} 
+                disabled={isSubmitting}
+                className="btn-stripe-icon !w-8 !h-8 disabled:opacity-50"
               >
                 <FaTimes size={13} />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Validation Error Message */}
+              {error && (
+                <div className="p-3 rounded-lg bg-[#fff1f2] dark:bg-[#4c0519]/50 border border-[#fecdd3] dark:border-[#9f1239] flex items-center gap-2 text-xs text-[#ea2261] dark:text-[#fda4af]">
+                  <FaExclamationCircle className="shrink-0 text-sm" />
+                  <span>{error}</span>
+                </div>
+              )}
+
               {/* Expense / Income Segmented Control Toggle */}
               <div className="flex p-1 bg-[#f6f9fc] dark:bg-gray-800/80 rounded-full border border-[#e3e8ee] dark:border-gray-700">
                 <button
                   type="button"
-                  onClick={() => { setType('expense'); setCategory(expenseCategories[0].id); }}
+                  onClick={() => { setType('expense'); setCategory(expenseCategories[0].id); setError(''); }}
+                  disabled={isSubmitting}
                   className={`flex-1 py-1.5 text-xs font-normal rounded-full transition-all cursor-pointer ${
                     type === 'expense' 
                       ? 'bg-[#ea2261] text-white shadow-sm font-medium' 
@@ -99,7 +136,8 @@ const AddTransaction = ({ isOpen, onClose, onAdd }) => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => { setType('income'); setCategory(incomeCategories[0].id); }}
+                  onClick={() => { setType('income'); setCategory(incomeCategories[0].id); setError(''); }}
+                  disabled={isSubmitting}
                   className={`flex-1 py-1.5 text-xs font-normal rounded-full transition-all cursor-pointer ${
                     type === 'income' 
                       ? 'bg-[#533afd] text-white shadow-sm font-medium' 
@@ -119,10 +157,15 @@ const AddTransaction = ({ isOpen, onClose, onAdd }) => {
                   <input 
                     type="number" 
                     step="0.01"
+                    min="0.01"
                     value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
+                    onChange={(e) => {
+                      setAmount(e.target.value);
+                      if (error) setError('');
+                    }}
                     placeholder="0.00"
-                    className="w-full text-2xl font-light font-tnum bg-[#f6f9fc] dark:bg-[#0b1329] border border-[#a8c3de] dark:border-gray-700 focus:border-[#533afd] focus:ring-2 focus:ring-[#533afd]/20 outline-none rounded-lg py-2.5 px-3 text-[#0d253d] dark:text-white placeholder:text-[#64748d]/40 transition-all"
+                    disabled={isSubmitting}
+                    className="w-full text-2xl font-light font-tnum bg-[#f6f9fc] dark:bg-[#0b1329] border border-[#a8c3de] dark:border-gray-700 focus:border-[#533afd] focus:ring-2 focus:ring-[#533afd]/20 outline-none rounded-lg py-2.5 px-3 text-[#0d253d] dark:text-white placeholder:text-[#64748d]/40 transition-all disabled:opacity-50"
                     autoFocus
                   />
                 </div>
@@ -141,7 +184,8 @@ const AddTransaction = ({ isOpen, onClose, onAdd }) => {
                         key={cat.id}
                         type="button"
                         onClick={() => setCategory(cat.id)}
-                        className={`flex flex-col items-center justify-center p-2.5 rounded-lg border transition-all cursor-pointer ${
+                        disabled={isSubmitting}
+                        className={`flex flex-col items-center justify-center p-2.5 rounded-lg border transition-all cursor-pointer disabled:opacity-50 ${
                           isSelected 
                             ? 'bg-[#533afd]/10 border-[#533afd] text-[#533afd] dark:text-[#665efd] dark:border-[#533afd] shadow-sm' 
                             : 'bg-[#f6f9fc] dark:bg-gray-800/40 border-[#e3e8ee] dark:border-gray-700/60 text-[#64748d] dark:text-gray-400 hover:bg-[#e3e8ee]/40'
@@ -164,7 +208,8 @@ const AddTransaction = ({ isOpen, onClose, onAdd }) => {
                   type="date" 
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full text-xs font-normal font-tnum bg-[#f6f9fc] dark:bg-[#0b1329] border border-[#a8c3de] dark:border-gray-700 focus:border-[#533afd] focus:ring-2 focus:ring-[#533afd]/20 outline-none rounded-lg py-2 px-3 text-[#0d253d] dark:text-white transition-all"
+                  disabled={isSubmitting}
+                  className="w-full text-xs font-normal font-tnum bg-[#f6f9fc] dark:bg-[#0b1329] border border-[#a8c3de] dark:border-gray-700 focus:border-[#533afd] focus:ring-2 focus:ring-[#533afd]/20 outline-none rounded-lg py-2 px-3 text-[#0d253d] dark:text-white transition-all disabled:opacity-50"
                 />
               </div>
 
@@ -178,16 +223,43 @@ const AddTransaction = ({ isOpen, onClose, onAdd }) => {
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   placeholder="What was this for?"
-                  className="w-full text-xs font-normal bg-[#f6f9fc] dark:bg-[#0b1329] border border-[#a8c3de] dark:border-gray-700 focus:border-[#533afd] focus:ring-2 focus:ring-[#533afd]/20 outline-none rounded-lg py-2 px-3 text-[#0d253d] dark:text-white placeholder:text-[#64748d]/40 transition-all"
+                  disabled={isSubmitting}
+                  className="w-full text-xs font-normal bg-[#f6f9fc] dark:bg-[#0b1329] border border-[#a8c3de] dark:border-gray-700 focus:border-[#533afd] focus:ring-2 focus:ring-[#533afd]/20 outline-none rounded-lg py-2 px-3 text-[#0d253d] dark:text-white placeholder:text-[#64748d]/40 transition-all disabled:opacity-50"
+                />
+              </div>
+
+              {/* Recurring Transaction Toggle */}
+              <div className="flex items-center justify-between p-3 rounded-lg bg-[#f6f9fc] dark:bg-gray-800/40 border border-[#e3e8ee] dark:border-gray-700">
+                <div className="flex items-center gap-2">
+                  <FaRedo className="text-xs text-[#533afd] dark:text-[#665efd]" />
+                  <div>
+                    <p className="text-xs font-normal text-[#0d253d] dark:text-white">Repeat Monthly</p>
+                    <p className="text-[10px] text-[#64748d] dark:text-gray-400">Auto-log on same day each month</p>
+                  </div>
+                </div>
+                <input 
+                  type="checkbox"
+                  checked={isRecurring}
+                  onChange={(e) => setIsRecurring(e.target.checked)}
+                  disabled={isSubmitting}
+                  className="w-4 h-4 accent-[#533afd] cursor-pointer rounded"
                 />
               </div>
 
               {/* Submit Button */}
               <button 
                 type="submit" 
-                className="btn-stripe-primary w-full py-3 text-sm font-normal mt-3 !rounded-full shadow-sm"
+                disabled={isSubmitting}
+                className="btn-stripe-primary w-full py-3 text-sm font-normal mt-3 !rounded-full shadow-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                Add Transaction
+                {isSubmitting ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Saving Transaction...</span>
+                  </>
+                ) : (
+                  <span>Add Transaction</span>
+                )}
               </button>
             </form>
           </motion.div>

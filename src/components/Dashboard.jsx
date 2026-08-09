@@ -1,12 +1,66 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaPlus, FaCalendarAlt, FaShieldAlt, FaExclamationTriangle, FaCheckCircle, FaInfoCircle, FaArrowDown, FaWallet, FaReceipt } from 'react-icons/fa';
 import { formatCurrency } from '../utils/currency';
 
 /**
+ * Animated Balance Count-Up Counter
+ */
+const AnimatedBalance = ({ value }) => {
+  const [displayValue, setDisplayValue] = useState(value);
+
+  useEffect(() => {
+    let startTimestamp = null;
+    const duration = 600; // ms
+    const startValue = displayValue;
+    const endValue = Number(value || 0);
+
+    if (startValue === endValue) return;
+
+    const step = (timestamp) => {
+      if (!startTimestamp) startTimestamp = timestamp;
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+      const current = startValue + (endValue - startValue) * progress;
+      setDisplayValue(current);
+
+      if (progress < 1) {
+        window.requestAnimationFrame(step);
+      }
+    };
+
+    const animFrame = window.requestAnimationFrame(step);
+    return () => window.cancelAnimationFrame(animFrame);
+  }, [value]);
+
+  return (
+    <motion.span key={value} initial={{ scale: 1.05 }} animate={{ scale: 1 }}>
+      {formatCurrency(displayValue)}
+    </motion.span>
+  );
+};
+
+/**
  * 1. CEDI CARD TILE (Hero Tile - lg:col-span-3 equal 50/50 split with Credit Score)
  */
-export const CediCardTile = ({ balance, cardHolder = 'YOU', last4 = '1234', className = 'lg:col-span-3' }) => {
+export const CediCardTile = ({ balance, cardHolder = 'YOU', last4 = '1234', className = 'lg:col-span-3', isLoading = false }) => {
+  if (isLoading) {
+    return (
+      <div className={`w-full ${className}`}>
+        <div className="stripe-card p-6 h-full min-h-[200px] flex flex-col justify-between animate-pulse bg-[#1c1e54]/90 dark:bg-[#1c1e54]/90 border border-white/10">
+          <div className="flex items-center justify-between">
+            <div className="w-10 h-7 rounded bg-white/20" />
+            <div className="w-12 h-6 rounded-full bg-white/20" />
+          </div>
+          <div className="w-48 h-6 rounded bg-white/20 my-4" />
+          <div className="flex justify-between items-end">
+            <div className="w-20 h-4 rounded bg-white/20" />
+            <div className="w-32 h-8 rounded bg-white/20" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`w-full ${className}`}>
       <motion.div
@@ -75,7 +129,7 @@ export const CediCardTile = ({ balance, cardHolder = 'YOU', last4 = '1234', clas
             </div>
           </div>
 
-          {/* Bottom Row: Card Holder & Visual Focal Point (Balance) */}
+          {/* Bottom Row: Card Holder & Visual Focal Point (Balance with Count-Up Animation) */}
           <div className="flex items-end justify-between">
             <div>
               <p className="text-[10px] uppercase tracking-[0.1px] font-normal text-white/50 mb-0.5">
@@ -91,7 +145,7 @@ export const CediCardTile = ({ balance, cardHolder = 'YOU', last4 = '1234', clas
                 BALANCE
               </p>
               <p className="text-2xl md:text-3xl font-light text-white tracking-tight font-tnum">
-                {formatCurrency(balance)}
+                <AnimatedBalance value={balance} />
               </p>
             </div>
           </div>
@@ -102,9 +156,30 @@ export const CediCardTile = ({ balance, cardHolder = 'YOU', last4 = '1234', clas
 };
 
 /**
- * 2. CREDIT SCORE TILE (Persistent Bento Tile)
+ * 2. CREDIT SCORE TILE (Persistent Bento Tile with Skeleton Support)
  */
-export const CreditScoreTile = ({ creditScore, className = 'lg:col-span-3' }) => {
+export const CreditScoreTile = ({ creditScore, className = 'lg:col-span-3', isLoading = false }) => {
+  if (isLoading) {
+    return (
+      <div className={`w-full ${className}`}>
+        <div className="stripe-card p-5 h-full flex flex-col justify-between animate-pulse">
+          <div className="flex items-start justify-between mb-3">
+            <div className="space-y-2">
+              <div className="w-20 h-3 bg-[#e3e8ee] dark:bg-gray-700/70 rounded" />
+              <div className="w-28 h-8 bg-[#e3e8ee] dark:bg-gray-700/70 rounded" />
+            </div>
+            <div className="w-9 h-9 rounded-full bg-[#e3e8ee] dark:bg-gray-700/70" />
+          </div>
+          <div className="w-full bg-[#e3e8ee] dark:bg-gray-700/70 h-2 rounded-full mb-3" />
+          <div className="flex items-center justify-between pt-2 border-t border-[#e3e8ee] dark:border-gray-800">
+            <div className="w-24 h-3 bg-[#e3e8ee] dark:bg-gray-700/70 rounded" />
+            <div className="w-20 h-3 bg-[#e3e8ee] dark:bg-gray-700/70 rounded" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   const getScoreColorConfig = (score) => {
     if (score >= 650) {
       return {

@@ -1,7 +1,7 @@
-import React, { useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { FaChartPie, FaLightbulb, FaInfoCircle, FaWallet, FaPiggyBank, FaCoins } from 'react-icons/fa';
+import { FaChartPie, FaLightbulb, FaInfoCircle, FaWallet, FaPiggyBank, FaCoins, FaSlidersH, FaCheck } from 'react-icons/fa';
 import { formatCurrency } from '../utils/currency';
 
 const COLORS = {
@@ -18,11 +18,15 @@ export const useInsightsAnalysis = (transactions = [], balance = 0) => {
     const expenses = transactions.filter(t => t.type === 'expense');
     const incomes = transactions.filter(t => t.type === 'income');
 
-    const totalSpent = expenses.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
-    const totalIncome = incomes.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+    const currentMonthStr = new Date().toISOString().slice(0, 7); // "YYYY-MM"
+    const currentMonthExpenses = expenses.filter(t => t.date && t.date.startsWith(currentMonthStr));
+    const currentMonthIncomes = incomes.filter(t => t.date && t.date.startsWith(currentMonthStr));
+
+    const totalSpent = currentMonthExpenses.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+    const totalIncome = currentMonthIncomes.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
     
-    // Category breakdown
-    const categoryTotals = expenses.reduce((acc, t) => {
+    // Monthly Category breakdown
+    const categoryTotals = currentMonthExpenses.reduce((acc, t) => {
       acc[t.category] = (acc[t.category] || 0) + (Number(t.amount) || 0);
       return acc;
     }, {});
@@ -71,9 +75,13 @@ export const useInsightsAnalysis = (transactions = [], balance = 0) => {
     const daysLeft = Math.max(1, daysInMonth - now.getDate() + 1);
     const dailyCap = balance > 0 ? balance / daysLeft : 0;
     const todayStr = new Date().toISOString().split('T')[0];
-    const todaysExpenses = expenses
-      .filter(t => t.date === todayStr)
-      .reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+    const todaysExpensesList = expenses.filter(t => t.date === todayStr);
+    
+    const todaysExpenses = todaysExpensesList.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+    const dailyCategoryTotals = todaysExpensesList.reduce((acc, t) => {
+      acc[t.category] = (acc[t.category] || 0) + (Number(t.amount) || 0);
+      return acc;
+    }, {});
     const todayPct = dailyCap > 0 ? Math.min(100, Math.round((todaysExpenses / dailyCap) * 100)) : 0;
 
     const savingsTxs = transactions.filter(t => t.type === 'expense' && t.category === 'Savings/Invest');
@@ -99,7 +107,7 @@ export const useInsightsAnalysis = (transactions = [], balance = 0) => {
       advice.unshift("Today's spending exceeded your calculated daily cap.");
     }
 
-    return { totalSpent, totalIncome, chartData, advice, requestSuggestion, topCategoryName, topCategoryValue, topCategoryPct, dailyCap, todaysExpenses, todayPct, lastSavingsTx, health };
+    return { totalSpent, totalIncome, categoryTotals, dailyCategoryTotals, chartData, advice, requestSuggestion, topCategoryName, topCategoryValue, topCategoryPct, dailyCap, todaysExpenses, todayPct, lastSavingsTx, health };
   }, [transactions, balance]);
 };
 
@@ -256,6 +264,131 @@ export const LastSavedTile = ({ lastSavingsTx, className = 'lg:col-span-3' }) =>
 };
 
 /**
+ * CATEGORY BUDGET CAPS BENTO TILE (lg:col-span-6)
+ */
+export const CategoryBudgetsTile = ({ dailyCategoryTotals = {}, className = 'lg:col-span-6' }) => {
+  const defaultCaps = {
+    'Food': 20,
+    'Transport': 15,
+    'Data/Airtime': 10,
+    'Entertainment': 10,
+    'Savings/Invest': 20,
+    'Other': 10,
+  };
+
+  const [budgets, setBudgets] = useState(() => {
+    try {
+      const stored = localStorage.getItem('dailyCategoryBudgets');
+      return stored ? JSON.parse(stored) : defaultCaps;
+    } catch {
+      return defaultCaps;
+    }
+  });
+
+  const [isEditing, setIsEditing] = useState(false);
+  const [editForm, setEditForm] = useState(budgets);
+
+  const handleSaveCaps = () => {
+    setBudgets(editForm);
+    localStorage.setItem('dailyCategoryBudgets', JSON.stringify(editForm));
+    setIsEditing(false);
+  };
+
+  return (
+    <div className={`w-full ${className}`}>
+      <motion.div 
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="stripe-card p-6 h-full flex flex-col justify-between"
+      >
+        <div>
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-base font-light text-[#0d253d] dark:text-white tracking-tight">Per-Category Daily Budget Caps</h3>
+              <p className="text-xs text-[#64748d] dark:text-gray-400 font-normal">Monitor spending limits per category</p>
+            </div>
+            <button 
+              type="button"
+              onClick={() => { setEditForm(budgets); setIsEditing(!isEditing); }}
+              className="btn-stripe-secondary text-xs !py-1 !px-3"
+            >
+              <FaSlidersH size={11} />
+              <span>{isEditing ? 'Cancel' : 'Set Category Caps'}</span>
+            </button>
+          </div>
+
+          {/* Edit Form Drawer */}
+          {isEditing ? (
+            <div className="p-4 rounded-xl bg-[#f6f9fc] dark:bg-gray-800/60 border border-[#e3e8ee] dark:border-gray-700 space-y-3 mb-4">
+              <h4 className="text-xs font-normal text-[#0d253d] dark:text-white uppercase tracking-wider">Set Daily Caps (GH₵)</h4>
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {Object.keys(defaultCaps).map((cat) => (
+                  <div key={cat}>
+                    <label className="block text-[11px] text-[#64748d] dark:text-gray-400 mb-1 truncate">{cat}</label>
+                    <input 
+                      type="number"
+                      min="0"
+                      value={editForm[cat] ?? 0}
+                      onChange={(e) => setEditForm({ ...editForm, [cat]: Number(e.target.value) || 0 })}
+                      className="w-full text-xs font-normal font-tnum bg-white dark:bg-[#0b1329] border border-[#a8c3de] dark:border-gray-700 rounded py-1.5 px-2 text-[#0d253d] dark:text-white outline-none focus:border-[#533afd]"
+                    />
+                  </div>
+                ))}
+              </div>
+              <button 
+                type="button"
+                onClick={handleSaveCaps}
+                className="btn-stripe-primary text-xs !py-1.5 !px-4 mt-2"
+              >
+                <FaCheck size={11} />
+                <span>Save Category Caps</span>
+              </button>
+            </div>
+          ) : null}
+
+          {/* Progress Bars Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Object.keys(defaultCaps).map((cat) => {
+              const spent = dailyCategoryTotals[cat] || 0;
+              const cap = budgets[cat] || defaultCaps[cat];
+              const pct = cap > 0 ? Math.min(100, Math.round((spent / cap) * 100)) : 0;
+              const isOver = spent > cap && cap > 0;
+              const isWarning = pct >= 75 && !isOver;
+
+              const progressColor = isOver 
+                ? 'bg-[#ea2261]' 
+                : isWarning 
+                ? 'bg-[#9b6829]' 
+                : 'bg-[#533afd]';
+
+              return (
+                <div key={cat} className="p-3 rounded-lg bg-[#f6f9fc] dark:bg-gray-800/40 border border-[#e3e8ee] dark:border-gray-700/60 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-normal text-[#0d253d] dark:text-gray-200 truncate">{cat}</span>
+                    <span className="font-tnum text-[11px] text-[#64748d] dark:text-gray-400">
+                      {formatCurrency(spent)} / <strong className="text-[#0d253d] dark:text-white">{formatCurrency(cap)}</strong>
+                    </span>
+                  </div>
+                  <div className="w-full h-1.5 bg-[#e3e8ee] dark:bg-gray-700 rounded-full overflow-hidden">
+                    <div className={`h-full rounded-full transition-all duration-300 ${progressColor}`} style={{ width: `${pct}%` }} />
+                  </div>
+                  <div className="flex justify-between items-center text-[10px] text-[#64748d] dark:text-gray-400">
+                    <span className={isOver ? 'text-[#ea2261] font-normal' : isWarning ? 'text-[#9b6829] font-normal' : ''}>
+                      {isOver ? 'Exceeded Cap!' : isWarning ? 'Near Limit' : 'Within Budget'}
+                    </span>
+                    <span className="font-tnum">{pct}%</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
+/**
  * SMART GUIDANCE BENTO TILE (Full width - lg:col-span-6)
  */
 export const SmartGuidanceTile = ({ analysis, className = 'lg:col-span-6' }) => {
@@ -352,6 +485,7 @@ const FeedbackCard = ({ transactions = [], balance = 0 }) => {
       <SpendingBreakdownTile analysis={analysis} className="lg:col-span-3" />
       <DailyCapTile dailyCap={analysis.dailyCap} className="lg:col-span-3" />
       <LastSavedTile lastSavingsTx={analysis.lastSavingsTx} className="lg:col-span-3" />
+      <CategoryBudgetsTile dailyCategoryTotals={analysis.dailyCategoryTotals} className="lg:col-span-6" />
       <SmartGuidanceTile analysis={analysis} className="lg:col-span-6" />
     </>
   );

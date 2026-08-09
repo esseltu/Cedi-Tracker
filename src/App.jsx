@@ -16,13 +16,14 @@ import FeedbackCard, {
   SpendingBreakdownTile, 
   DailyCapTile, 
   LastSavedTile, 
+  CategoryBudgetsTile,
   SmartGuidanceTile 
 } from './components/FeedbackCard';
 import Login from './components/Login';
 import IncomeSuggestionModal from './components/IncomeSuggestionModal';
 import ClearTransactionsModal from './components/ClearTransactionsModal';
 import { exportTransactionsToPdf } from './utils/exportPdf';
-import { FaHistory, FaChartPie, FaSignOutAlt, FaMoon, FaSun, FaFilePdf, FaTrashAlt } from 'react-icons/fa';
+import { FaHistory, FaChartPie, FaSignOutAlt, FaMoon, FaSun, FaFilePdf, FaTrashAlt, FaSearch, FaCheckCircle } from 'react-icons/fa';
 import { db, auth, googleProvider } from './firebase';
 import { collection, addDoc, onSnapshot, query, where, deleteDoc, updateDoc, doc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
@@ -32,13 +33,17 @@ function App() {
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('dashboard'); // dashboard, history, analysis
   const [filterType, setFilterType] = useState('all'); // 'all', 'income', 'expense'
+  const [searchQuery, setSearchQuery] = useState('');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showClearModal, setShowClearModal] = useState(false);
   const [isDeletingAll, setIsDeletingAll] = useState(false);
   const [lastIncome, setLastIncome] = useState(null);
   const [showUndo, setShowUndo] = useState(false);
   const [undoTx, setUndoTx] = useState(null);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [successMsg, setSuccessMsg] = useState('');
   const undoTimerRef = useRef(null);
+  const toastTimerRef = useRef(null);
 
   const getInitialTheme = () => {
     try {
@@ -62,10 +67,14 @@ function App() {
   // State
   const [transactions, setTransactions] = useState([]);
 
-  // Filter Logic
+  // Filter Logic (Search + Type Filter)
   const filteredTransactions = transactions.filter(t => {
-    if (filterType === 'all') return true;
-    return t.type === filterType;
+    const matchesType = filterType === 'all' || t.type === filterType;
+    const q = searchQuery.trim().toLowerCase();
+    const matchesSearch = !q || 
+      t.category.toLowerCase().includes(q) || 
+      (t.note && t.note.toLowerCase().includes(q));
+    return matchesType && matchesSearch;
   });
 
   // Derived State (Memoized)
@@ -160,6 +169,42 @@ function App() {
     return () => unsubscribe();
   }, [user]);
 
+  // Auto-process monthly recurring transactions on app load
+  useEffect(() => {
+    if (!user || transactions.length === 0) return;
+
+    const today = new Date();
+    const currentMonthStr = today.toISOString().slice(0, 7); // "YYYY-MM"
+    const currentDayStr = String(today.getDate()).padStart(2, '0');
+    const targetDateStr = `${currentMonthStr}-${currentDayStr}`;
+
+    const recurringTemplates = transactions.filter(t => t.isRecurring);
+    recurringTemplates.forEach(async (recTx) => {
+      const alreadyLogged = transactions.some(t => 
+        t.category === recTx.category && 
+        t.amount === recTx.amount && 
+        t.date && t.date.startsWith(currentMonthStr)
+      );
+
+      if (!alreadyLogged) {
+        try {
+          await addDoc(collection(db, 'transactions'), {
+            amount: recTx.amount,
+            category: recTx.category,
+            note: recTx.note ? `${recTx.note} (Auto-recurring)` : 'Auto-recurring monthly',
+            date: targetDateStr,
+            type: recTx.type,
+            isRecurring: true,
+            uid: user.uid,
+            createdAt: serverTimestamp()
+          });
+        } catch (err) {
+          console.error("Auto-recurring log failed:", err);
+        }
+      }
+    });
+  }, [user, transactions]);
+
   const handleLogin = async () => {
     try {
       await signInWithPopup(auth, googleProvider);
@@ -191,6 +236,13 @@ function App() {
       if (transaction.type === 'income') {
         setLastIncome(transaction);
       }
+
+      // Show success toast
+      setSuccessMsg(`${transaction.type === 'income' ? 'Income' : 'Expense'} of GH₵${transaction.amount.toLocaleString()} added!`);
+      setShowSuccessToast(true);
+      if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+      toastTimerRef.current = setTimeout(() => setShowSuccessToast(false), 4000);
+
     } catch (e) {
       console.error("Error adding document: ", e);
       alert("Failed to save transaction. Check internet connection.");
@@ -291,7 +343,8 @@ function App() {
   const persistentCreditScoreTile = (
     <CreditScoreTile 
       key="persistent-credit-score-tile"
-      creditScore={creditScore} 
+      creditScore={creditScore}
+      isLoading={loading}
       className={activeTab === 'history' ? 'lg:col-span-2' : 'lg:col-span-3'} 
     />
   );
@@ -370,10 +423,11 @@ function App() {
           {/* DASHBOARD TAB BENTO MOSAIC */}
           {activeTab === 'dashboard' && (
             <>
-              {/* Row 1: Cedi Card Hero Tile (3 cols) | Credit Score (3 cols) - Equal 50/50 split */}
+              {/* Row 1: Cedi Card Hero Tile (3 cols) | Credit Score (3 cols) */}
               <CediCardTile 
                 balance={balance} 
                 cardHolder={user?.displayName || 'YOU'} 
+                isLoading={loading}
                 className="lg:col-span-3" 
               />
               {persistentCreditScoreTile}
@@ -420,22 +474,36 @@ function App() {
                   </div>
                 </div>
 
-                {/* Filter Pills & Secondary Actions */}
+                {/* Filter Pills, Search Bar & Actions */}
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <div className="flex gap-1.5 p-1 bg-[#e3e8ee]/50 dark:bg-gray-800/60 rounded-full border border-[#e3e8ee] dark:border-gray-700">
-                    {['all', 'expense', 'income'].map((type) => (
-                      <button
-                        key={type}
-                        onClick={() => setFilterType(type)}
-                        className={`px-3.5 py-1 text-xs font-normal rounded-full capitalize transition-all cursor-pointer ${
-                          filterType === type 
-                            ? 'bg-[#533afd] text-white shadow-sm' 
-                            : 'text-[#64748d] dark:text-gray-400 hover:text-[#0d253d]'
-                        }`}
-                      >
-                        {type}
-                      </button>
-                    ))}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex gap-1.5 p-1 bg-[#e3e8ee]/50 dark:bg-gray-800/60 rounded-full border border-[#e3e8ee] dark:border-gray-700">
+                      {['all', 'expense', 'income'].map((type) => (
+                        <button
+                          key={type}
+                          onClick={() => setFilterType(type)}
+                          className={`px-3.5 py-1 text-xs font-normal rounded-full capitalize transition-all cursor-pointer ${
+                            filterType === type 
+                              ? 'bg-[#533afd] text-white shadow-sm' 
+                              : 'text-[#64748d] dark:text-gray-400 hover:text-[#0d253d]'
+                          }`}
+                        >
+                          {type}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Search Input */}
+                    <div className="relative flex items-center">
+                      <FaSearch className="absolute left-3 text-xs text-[#64748d] dark:text-gray-400 pointer-events-none" />
+                      <input 
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search note or category..."
+                        className="pl-8 pr-3 py-1 text-xs font-normal bg-white dark:bg-gray-800/80 border border-[#e3e8ee] dark:border-gray-700 rounded-full text-[#0d253d] dark:text-white outline-none focus:border-[#533afd] transition-all w-44 sm:w-52"
+                      />
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -468,6 +536,8 @@ function App() {
                   transactions={filteredTransactions.slice(0, 7)} 
                   onDelete={handleDeleteTransaction} 
                   onUpdate={handleUpdateTransaction} 
+                  isLoading={loading}
+                  filterType={filterType}
                 />
 
                 {filteredTransactions.length > 7 && (
@@ -493,7 +563,10 @@ function App() {
               <DailyCapTile dailyCap={insightsAnalysis.dailyCap} className="lg:col-span-3" />
               <LastSavedTile lastSavingsTx={insightsAnalysis.lastSavingsTx} className="lg:col-span-3" />
 
-              {/* Row 3: Smart Guidance (Full 6 cols - Add Transaction tile omitted) */}
+              {/* Row 3: Per-Category Daily Budget Caps Tile (Full 6 cols) */}
+              <CategoryBudgetsTile dailyCategoryTotals={insightsAnalysis.dailyCategoryTotals} className="lg:col-span-6" />
+
+              {/* Row 4: Smart Guidance (Full 6 cols) */}
               <SmartGuidanceTile analysis={insightsAnalysis} className="lg:col-span-6" />
             </>
           )}
@@ -514,22 +587,36 @@ function App() {
                   </h2>
                 </div>
 
-                {/* Filter Pills & Secondary Actions */}
+                {/* Filter Pills, Search Bar & Secondary Actions */}
                 <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <div className="flex gap-1.5 p-1 bg-[#e3e8ee]/50 dark:bg-gray-800/60 rounded-full border border-[#e3e8ee] dark:border-gray-700">
-                    {['all', 'expense', 'income'].map((type) => (
-                      <button
-                        key={type}
-                        onClick={() => setFilterType(type)}
-                        className={`px-3.5 py-1 text-xs font-normal rounded-full capitalize transition-all cursor-pointer ${
-                          filterType === type 
-                            ? 'bg-[#533afd] text-white shadow-sm' 
-                            : 'text-[#64748d] dark:text-gray-400 hover:text-[#0d253d]'
-                        }`}
-                      >
-                        {type}
-                      </button>
-                    ))}
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <div className="flex gap-1.5 p-1 bg-[#e3e8ee]/50 dark:bg-gray-800/60 rounded-full border border-[#e3e8ee] dark:border-gray-700">
+                      {['all', 'expense', 'income'].map((type) => (
+                        <button
+                          key={type}
+                          onClick={() => setFilterType(type)}
+                          className={`px-3.5 py-1 text-xs font-normal rounded-full capitalize transition-all cursor-pointer ${
+                            filterType === type 
+                              ? 'bg-[#533afd] text-white shadow-sm' 
+                              : 'text-[#64748d] dark:text-gray-400 hover:text-[#0d253d]'
+                          }`}
+                        >
+                          {type}
+                        </button>
+                      ))}
+                    </div>
+
+                    {/* Search Input in History */}
+                    <div className="relative flex items-center">
+                      <FaSearch className="absolute left-3 text-xs text-[#64748d] dark:text-gray-400 pointer-events-none" />
+                      <input 
+                        type="text"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        placeholder="Search note or category..."
+                        className="pl-8 pr-3 py-1 text-xs font-normal bg-white dark:bg-gray-800/80 border border-[#e3e8ee] dark:border-gray-700 rounded-full text-[#0d253d] dark:text-white outline-none focus:border-[#533afd] transition-all w-48 sm:w-60"
+                      />
+                    </div>
                   </div>
 
                   <div className="flex items-center gap-2">
@@ -562,6 +649,8 @@ function App() {
                   transactions={filteredTransactions} 
                   onDelete={handleDeleteTransaction} 
                   onUpdate={handleUpdateTransaction} 
+                  isLoading={loading}
+                  filterType={filterType}
                 />
               </div>
             </>
@@ -591,6 +680,16 @@ function App() {
         count={transactions.length}
         isDeleting={isDeletingAll}
       />
+
+      {/* Success Toast Notification */}
+      {showSuccessToast && (
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 animate-bounce">
+          <div className="px-4 py-3 bg-[#0d253d] text-white rounded-xl shadow-xl flex items-center gap-2.5 border border-white/10">
+            <FaCheckCircle className="text-[#059669] text-sm shrink-0" />
+            <span className="text-xs font-normal">{successMsg}</span>
+          </div>
+        </div>
+      )}
 
       {/* Undo Snackbar */}
       {showUndo && (
