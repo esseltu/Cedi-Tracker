@@ -23,7 +23,7 @@ import Login from './components/Login';
 import IncomeSuggestionModal from './components/IncomeSuggestionModal';
 import ClearTransactionsModal from './components/ClearTransactionsModal';
 import { exportTransactionsToPdf } from './utils/exportPdf';
-import { FaHistory, FaChartPie, FaSignOutAlt, FaMoon, FaSun, FaFilePdf, FaTrashAlt, FaSearch, FaCheckCircle } from 'react-icons/fa';
+import { FaHistory, FaChartPie, FaSignOutAlt, FaMoon, FaSun, FaFilePdf, FaTrashAlt, FaSearch, FaCheckCircle, FaHome } from 'react-icons/fa';
 import { db, auth, googleProvider } from './firebase';
 import { collection, addDoc, onSnapshot, query, where, deleteDoc, updateDoc, doc, serverTimestamp, writeBatch } from 'firebase/firestore';
 import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
@@ -339,25 +339,24 @@ function App() {
     return <Login onLogin={handleLogin} />;
   }
 
-  // Persistent Credit Score Tile (mounted once at App level)
   const persistentCreditScoreTile = (
     <CreditScoreTile 
       key="persistent-credit-score-tile"
       creditScore={creditScore}
       isLoading={loading}
-      className={activeTab === 'history' ? 'lg:col-span-2' : 'lg:col-span-3'} 
+      className={activeTab === 'history' ? 'md:col-span-2 lg:col-span-2' : 'md:col-span-2 lg:col-span-3'} 
     />
   );
 
   return (
-    <div className="min-h-screen pb-24 max-w-md lg:max-w-[1200px] mx-auto relative px-4 sm:px-6 lg:px-8 lg:py-6">
+    <div className="min-h-screen pb-24 max-w-md md:max-w-3xl lg:max-w-[1200px] mx-auto relative px-4 sm:px-6 lg:px-8 lg:py-6 overflow-x-hidden">
       {/* Top Bar */}
-      <header className="pt-6 lg:pt-0 pb-4 flex justify-between items-center sticky top-0 z-30 bg-[#f6f9fc]/90 dark:bg-[#0b1329]/90 backdrop-blur-md mb-4 lg:mb-8 border-b border-[#e3e8ee] dark:border-gray-800">
+      <header className="py-3 sm:py-4 flex justify-between items-center sticky top-0 z-30 bg-[#f6f9fc]/95 dark:bg-[#0b1329]/95 backdrop-blur-md mb-4 lg:mb-6 border-b border-[#e3e8ee] dark:border-gray-800 shadow-[0_2px_10px_-4px_rgba(0,55,112,0.05)] dark:shadow-none -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <div>
-          <h1 className="text-xl lg:text-2xl font-light text-[#0d253d] dark:text-white tracking-tight">
+          <h1 className="text-xl lg:text-2xl font-semibold text-[#0d253d] dark:text-white tracking-tight mb-0.5 leading-none">
             Cedi Tracker
           </h1>
-          <p className="text-xs text-[#64748d] dark:text-gray-400 font-normal">
+          <p className="text-[11px] sm:text-xs text-[#64748d] dark:text-gray-400 font-medium tracking-wide">
             Welcome, {user.displayName?.split(' ')[0] || 'Essel'}
           </p>
         </div>
@@ -397,22 +396,24 @@ function App() {
         </div>
 
         {/* User Profile & Theme Toggle */}
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-3">
           <button type="button" onClick={toggleTheme} className="btn-stripe-icon" aria-label="Toggle theme" title="Toggle Theme">
             {theme === 'dark' ? <FaSun size={14} /> : <FaMoon size={14} />}
           </button>
           
-          {user.photoURL ? (
-            <img src={user.photoURL} alt="Profile" className="w-9 h-9 rounded-full border border-[#e3e8ee] dark:border-gray-700 shadow-sm" />
-          ) : (
-            <div className="w-9 h-9 rounded-full bg-[#533afd]/10 text-[#533afd] border border-[#533afd]/20 flex items-center justify-center font-normal text-xs font-tnum">
-              {user.email?.[0].toUpperCase() || 'U'}
-            </div>
-          )}
+          <div className="flex items-center gap-1 p-1 bg-[#e3e8ee]/50 dark:bg-gray-800/60 rounded-full border border-[#e3e8ee] dark:border-gray-700">
+            {user.photoURL ? (
+              <img src={user.photoURL} alt="Profile" className="w-9 h-9 sm:w-10 sm:h-10 rounded-full ring-2 ring-white dark:ring-gray-700 shadow-sm object-cover" />
+            ) : (
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-[#533afd]/10 text-[#533afd] ring-2 ring-white dark:ring-[#1c1e54] flex items-center justify-center font-medium text-sm shadow-sm">
+                {user.email?.[0].toUpperCase() || 'U'}
+              </div>
+            )}
 
-          <button onClick={handleLogout} className="btn-stripe-icon text-[#64748d] hover:text-[#ea2261]" title="Sign Out">
-            <FaSignOutAlt size={14} />
-          </button>
+            <button onClick={handleLogout} className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-full text-[#64748d] hover:bg-white hover:text-[#ea2261] dark:hover:bg-[#1c1e54] dark:hover:text-rose-400 transition-all cursor-pointer" title="Sign Out">
+              <FaSignOutAlt size={14} />
+            </button>
+          </div>
         </div>
       </header>
 
@@ -428,61 +429,45 @@ function App() {
                 balance={balance} 
                 cardHolder={user?.displayName || 'YOU'} 
                 isLoading={loading}
-                className="lg:col-span-3" 
+                className="md:col-span-2 lg:col-span-3" 
               />
               {persistentCreditScoreTile}
 
               {/* Row 2: Add Transaction (2 cols) | Total Income (2 cols) | Total Expenses (2 cols) */}
               <AddTransactionTile 
                 onAddClick={() => setShowAddModal(true)} 
-                className="lg:col-span-2" 
+                className="md:col-span-2 lg:col-span-2" 
               />
-              <TotalIncomeTile totalIncome={totalIncome} className="lg:col-span-2" />
-              <TotalExpensesTile totalExpenses={totalExpenses} className="lg:col-span-2" />
+              <TotalIncomeTile totalIncome={totalIncome} className="md:col-span-1 lg:col-span-2" />
+              <TotalExpensesTile totalExpenses={totalExpenses} className="md:col-span-1 lg:col-span-2" />
 
               {/* Row 3: Low Funds Warning Banner Tile (Full 6 cols) */}
               <LowFundsBannerTile 
                 balance={balance} 
                 creditScore={creditScore} 
                 transactions={transactions} 
-                className="lg:col-span-6" 
+                className="md:col-span-2 lg:col-span-6" 
               />
 
               {/* Row 4: Recent Transactions Table Tile (Full 6 cols) */}
-              <div className="lg:col-span-6 space-y-4 pt-2">
+              <div className="md:col-span-2 lg:col-span-6 space-y-4 pt-2">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-light text-[#0d253d] dark:text-white tracking-tight">
                     Recent Transactions
                   </h2>
 
-                  {/* Mobile Tab Toggle Buttons */}
-                  <div className="flex lg:hidden items-center gap-1.5">
-                    <button 
-                      onClick={() => setActiveTab('history')}
-                      className="btn-stripe-icon"
-                      title="History View"
-                    >
-                      <FaHistory size={13} />
-                    </button>
-                    <button 
-                      onClick={() => setActiveTab('analysis')}
-                      className="btn-stripe-icon"
-                      title="Insights View"
-                    >
-                      <FaChartPie size={13} />
-                    </button>
-                  </div>
+
                 </div>
 
                 {/* Filter Pills, Search Bar & Actions */}
-                <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <div className="flex gap-1.5 p-1 bg-[#e3e8ee]/50 dark:bg-gray-800/60 rounded-full border border-[#e3e8ee] dark:border-gray-700">
+                <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+                  <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full lg:w-auto">
+                    <div className="flex gap-1.5 p-1 bg-[#e3e8ee]/50 dark:bg-gray-800/60 rounded-full border border-[#e3e8ee] dark:border-gray-700 w-full md:w-auto">
                       {['all', 'expense', 'income'].map((type) => (
                         <button
                           key={type}
                           onClick={() => setFilterType(type)}
-                          className={`px-3.5 py-1 text-xs font-normal rounded-full capitalize transition-all cursor-pointer ${
+                          className={`flex-1 md:flex-none px-3.5 py-1.5 text-xs font-normal rounded-full capitalize transition-all cursor-pointer ${
                             filterType === type 
                               ? 'bg-[#533afd] text-white shadow-sm' 
                               : 'text-[#64748d] dark:text-gray-400 hover:text-[#0d253d]'
@@ -494,24 +479,24 @@ function App() {
                     </div>
 
                     {/* Search Input */}
-                    <div className="relative flex items-center">
+                    <div className="relative flex items-center w-full md:w-auto">
                       <FaSearch className="absolute left-3 text-xs text-[#64748d] dark:text-gray-400 pointer-events-none" />
                       <input 
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search note or category..."
-                        className="pl-8 pr-3 py-1 text-xs font-normal bg-white dark:bg-gray-800/80 border border-[#e3e8ee] dark:border-gray-700 rounded-full text-[#0d253d] dark:text-white outline-none focus:border-[#533afd] transition-all w-44 sm:w-52"
+                        className="w-full md:w-60 lg:w-52 pl-8 pr-3 py-1.5 text-xs font-normal bg-white dark:bg-gray-800/80 border border-[#e3e8ee] dark:border-gray-700 rounded-full text-[#0d253d] dark:text-white outline-none focus:border-[#533afd] transition-all"
                       />
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 w-full lg:w-auto">
                     <button
                       type="button"
                       onClick={handleExportPdf}
                       disabled={transactions.length === 0}
-                      className="btn-stripe-secondary text-xs !py-1.5 !px-3"
+                      className="flex-1 sm:flex-none btn-stripe-secondary text-xs !py-1.5 !px-3 justify-center"
                       title="Export Transactions as PDF"
                     >
                       <FaFilePdf size={12} />
@@ -522,7 +507,7 @@ function App() {
                       type="button"
                       onClick={() => setShowClearModal(true)}
                       disabled={transactions.length === 0}
-                      className="btn-stripe-danger text-xs !py-1.5 !px-3"
+                      className="flex-1 sm:flex-none btn-stripe-danger text-xs !py-1.5 !px-3 justify-center"
                       title="Clear All Transactions"
                     >
                       <FaTrashAlt size={11} />
@@ -556,18 +541,18 @@ function App() {
           {activeTab === 'analysis' && (
             <>
               {/* Row 1: Spending Breakdown Donut Chart (3 cols) | Persistent Credit Score (3 cols) */}
-              <SpendingBreakdownTile analysis={insightsAnalysis} className="lg:col-span-3" />
+              <SpendingBreakdownTile analysis={insightsAnalysis} className="md:col-span-2 lg:col-span-3" />
               {persistentCreditScoreTile}
 
               {/* Row 2: Daily Cap Tile (3 cols) | Last Saved Tile (3 cols) */}
-              <DailyCapTile dailyCap={insightsAnalysis.dailyCap} className="lg:col-span-3" />
-              <LastSavedTile lastSavingsTx={insightsAnalysis.lastSavingsTx} className="lg:col-span-3" />
+              <DailyCapTile dailyCap={insightsAnalysis.dailyCap} className="md:col-span-1 lg:col-span-3" />
+              <LastSavedTile lastSavingsTx={insightsAnalysis.lastSavingsTx} className="md:col-span-1 lg:col-span-3" />
 
               {/* Row 3: Per-Category Daily Budget Caps Tile (Full 6 cols) */}
-              <CategoryBudgetsTile dailyCategoryTotals={insightsAnalysis.dailyCategoryTotals} className="lg:col-span-6" />
+              <CategoryBudgetsTile dailyCategoryTotals={insightsAnalysis.dailyCategoryTotals} className="md:col-span-2 lg:col-span-6" />
 
               {/* Row 4: Smart Guidance (Full 6 cols) */}
-              <SmartGuidanceTile analysis={insightsAnalysis} className="lg:col-span-6" />
+              <SmartGuidanceTile analysis={insightsAnalysis} className="md:col-span-2 lg:col-span-6" />
             </>
           )}
 
@@ -576,11 +561,11 @@ function App() {
             <>
               {/* Row 1: Persistent Credit Score (2 cols) | Total Income (2 cols) | Total Expenses (2 cols) */}
               {persistentCreditScoreTile}
-              <TotalIncomeTile totalIncome={totalIncome} className="lg:col-span-2" />
-              <TotalExpensesTile totalExpenses={totalExpenses} className="lg:col-span-2" />
+              <TotalIncomeTile totalIncome={totalIncome} className="md:col-span-1 lg:col-span-2" />
+              <TotalExpensesTile totalExpenses={totalExpenses} className="md:col-span-1 lg:col-span-2" />
 
               {/* Row 2: Full Transaction History Table (Full 6 cols - Add Transaction tile omitted) */}
-              <div className="lg:col-span-6 space-y-4 pt-2">
+              <div className="md:col-span-2 lg:col-span-6 space-y-4 pt-2">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-light text-[#0d253d] dark:text-white tracking-tight">
                     Transaction History
@@ -588,14 +573,14 @@ function App() {
                 </div>
 
                 {/* Filter Pills, Search Bar & Secondary Actions */}
-                <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <div className="flex gap-1.5 p-1 bg-[#e3e8ee]/50 dark:bg-gray-800/60 rounded-full border border-[#e3e8ee] dark:border-gray-700">
+                <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
+                  <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full lg:w-auto">
+                    <div className="flex gap-1.5 p-1 bg-[#e3e8ee]/50 dark:bg-gray-800/60 rounded-full border border-[#e3e8ee] dark:border-gray-700 w-full md:w-auto">
                       {['all', 'expense', 'income'].map((type) => (
                         <button
                           key={type}
                           onClick={() => setFilterType(type)}
-                          className={`px-3.5 py-1 text-xs font-normal rounded-full capitalize transition-all cursor-pointer ${
+                          className={`flex-1 md:flex-none px-3.5 py-1.5 text-xs font-normal rounded-full capitalize transition-all cursor-pointer ${
                             filterType === type 
                               ? 'bg-[#533afd] text-white shadow-sm' 
                               : 'text-[#64748d] dark:text-gray-400 hover:text-[#0d253d]'
@@ -607,24 +592,24 @@ function App() {
                     </div>
 
                     {/* Search Input in History */}
-                    <div className="relative flex items-center">
+                    <div className="relative flex items-center w-full md:w-auto">
                       <FaSearch className="absolute left-3 text-xs text-[#64748d] dark:text-gray-400 pointer-events-none" />
                       <input 
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search note or category..."
-                        className="pl-8 pr-3 py-1 text-xs font-normal bg-white dark:bg-gray-800/80 border border-[#e3e8ee] dark:border-gray-700 rounded-full text-[#0d253d] dark:text-white outline-none focus:border-[#533afd] transition-all w-48 sm:w-60"
+                        className="w-full md:w-60 lg:w-52 pl-8 pr-3 py-1.5 text-xs font-normal bg-white dark:bg-gray-800/80 border border-[#e3e8ee] dark:border-gray-700 rounded-full text-[#0d253d] dark:text-white outline-none focus:border-[#533afd] transition-all"
                       />
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 w-full lg:w-auto">
                     <button
                       type="button"
                       onClick={handleExportPdf}
                       disabled={transactions.length === 0}
-                      className="btn-stripe-secondary text-xs !py-1.5 !px-3"
+                      className="flex-1 sm:flex-none btn-stripe-secondary text-xs !py-1.5 !px-3 justify-center"
                       title="Export Transactions as PDF"
                     >
                       <FaFilePdf size={12} />
@@ -635,7 +620,7 @@ function App() {
                       type="button"
                       onClick={() => setShowClearModal(true)}
                       disabled={transactions.length === 0}
-                      className="btn-stripe-danger text-xs !py-1.5 !px-3"
+                      className="flex-1 sm:flex-none btn-stripe-danger text-xs !py-1.5 !px-3 justify-center"
                       title="Clear All Transactions"
                     >
                       <FaTrashAlt size={11} />
@@ -658,6 +643,39 @@ function App() {
 
         </div>
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#f6f9fc]/90 dark:bg-[#0b1329]/90 backdrop-blur-md border-t border-[#e3e8ee] dark:border-gray-800">
+        <div className="flex justify-around items-center pt-3 pb-5">
+          <button
+            onClick={() => setActiveTab('dashboard')}
+            className={`flex flex-col items-center gap-1 transition-all cursor-pointer ${
+              activeTab === 'dashboard' ? 'text-[#533afd] dark:text-[#665efd]' : 'text-[#64748d] dark:text-gray-400'
+            }`}
+          >
+            <FaHome size={20} />
+            <span className="text-[10px] font-medium">Home</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('history')}
+            className={`flex flex-col items-center gap-1 transition-all cursor-pointer ${
+              activeTab === 'history' ? 'text-[#533afd] dark:text-[#665efd]' : 'text-[#64748d] dark:text-gray-400'
+            }`}
+          >
+            <FaHistory size={18} />
+            <span className="text-[10px] font-medium">History</span>
+          </button>
+          <button
+            onClick={() => setActiveTab('analysis')}
+            className={`flex flex-col items-center gap-1 transition-all cursor-pointer ${
+              activeTab === 'analysis' ? 'text-[#533afd] dark:text-[#665efd]' : 'text-[#64748d] dark:text-gray-400'
+            }`}
+          >
+            <FaChartPie size={18} />
+            <span className="text-[10px] font-medium">Insights</span>
+          </button>
+        </div>
+      </div>
 
       {/* Add Transaction Modal */}
       <AddTransaction 
