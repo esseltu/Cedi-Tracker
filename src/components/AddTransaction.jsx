@@ -62,7 +62,7 @@ const AddTransaction = ({ isOpen, onClose, onAdd }) => {
       onClose();
     } catch (err) {
       console.error("Failed to add transaction:", err);
-      setError("Failed to save transaction. Check your internet connection.");
+      setError(`Failed to save transaction: ${err.message || 'Unknown error'}`);
     } finally {
       setIsSubmitting(false);
     }

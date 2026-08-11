@@ -245,7 +245,7 @@ function App() {
 
     } catch (e) {
       console.error("Error adding document: ", e);
-      alert("Failed to save transaction. Check internet connection.");
+      alert(`Failed to save transaction: ${e.message}`);
     }
   };
 
