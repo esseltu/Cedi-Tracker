@@ -554,7 +554,7 @@ function App() {
               <LastSavedTile lastSavingsTx={insightsAnalysis.lastSavingsTx} className="md:col-span-1 lg:col-span-3" />
 
               {/* Row 3: Per-Category Daily Budget Caps Tile (Full 6 cols) */}
-              <CategoryBudgetsTile dailyCategoryTotals={insightsAnalysis.dailyCategoryTotals} className="md:col-span-2 lg:col-span-6" />
+              <CategoryBudgetsTile analysis={insightsAnalysis} className="md:col-span-2 lg:col-span-6" />
 
               {/* Row 4: Smart Guidance (Full 6 cols) */}
               <SmartGuidanceTile analysis={insightsAnalysis} className="md:col-span-2 lg:col-span-6" />
