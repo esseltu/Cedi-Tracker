@@ -224,7 +224,12 @@ function App() {
   };
 
   const handleAddTransaction = async (transaction) => {
-    if (!user) return;
+    if (!user) {
+      console.error("No user found during handleAddTransaction!");
+      return;
+    }
+    
+    console.log("Authenticated User UID before write:", user.uid);
 
     try {
       await addDoc(collection(db, 'transactions'), {
