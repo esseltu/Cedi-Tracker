@@ -229,11 +229,11 @@ export const SpendingBreakdownTile = ({ analysis, className = 'lg:col-span-3' })
           {/* Category Legend Grid */}
           <div className="mt-3 pt-3 border-t border-[#e3e8ee] dark:border-gray-800 grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
             {analysis.chartData.map((item) => (
-              <div key={item.name} className="flex items-center gap-2">
+              <div key={item.name} className="flex items-center gap-2 min-w-0">
                 <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[item.name] || COLORS['Other'] }} />
-                <div className="truncate">
+                <div className="min-w-0 flex-1">
                   <span className="text-[#64748d] dark:text-gray-400 font-normal block text-[11px] truncate">{item.name}</span>
-                  <span className="font-normal font-tnum text-[#0d253d] dark:text-white">{formatCurrency(Number(item.value))}</span>
+                  <span className="font-normal font-tnum text-[#0d253d] dark:text-white block truncate">{formatCurrency(Number(item.value))}</span>
                 </div>
               </div>
             ))}

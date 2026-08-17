@@ -162,16 +162,29 @@ export const CreditScoreTile = ({ creditScore, className = 'lg:col-span-3', isLo
   if (isLoading) {
     return (
       <div className={`w-full ${className}`}>
-        <div className="stripe-card p-5 h-full flex flex-col justify-between animate-pulse">
-          <div className="flex items-start justify-between mb-3">
-            <div className="space-y-2">
+        <div className="stripe-card p-5 flex flex-col animate-pulse">
+          <div className="flex flex-col gap-5">
+            <div className="flex justify-between">
               <div className="w-20 h-3 bg-[#e3e8ee] dark:bg-gray-700/70 rounded" />
-              <div className="w-28 h-8 bg-[#e3e8ee] dark:bg-gray-700/70 rounded" />
             </div>
-            <div className="w-9 h-9 rounded-full bg-[#e3e8ee] dark:bg-gray-700/70" />
+            
+            {/* Skeleton Arc */}
+            <div className="flex flex-col items-center justify-center w-full max-w-[220px] mx-auto">
+              <div className="w-48 h-24 bg-[#e3e8ee] dark:bg-gray-700/70 rounded-t-full border-b-0" />
+              <div className="w-28 h-6 bg-[#e3e8ee] dark:bg-gray-700/70 rounded-full mt-3" />
+            </div>
+            
+            <div className="flex flex-col gap-3">
+              <div className="w-full h-12 bg-[#e3e8ee] dark:bg-gray-700/70 rounded-lg" />
+              <div className="grid grid-cols-3 gap-2">
+                <div className="h-8 bg-[#e3e8ee] dark:bg-gray-700/70 rounded-md" />
+                <div className="h-8 bg-[#e3e8ee] dark:bg-gray-700/70 rounded-md" />
+                <div className="h-8 bg-[#e3e8ee] dark:bg-gray-700/70 rounded-md" />
+              </div>
+            </div>
           </div>
-          <div className="w-full bg-[#e3e8ee] dark:bg-gray-700/70 h-2 rounded-full mb-3" />
-          <div className="flex items-center justify-between pt-2 border-t border-[#e3e8ee] dark:border-gray-800">
+
+          <div className="flex items-center justify-between pt-3 border-t border-[#e3e8ee] dark:border-gray-800 mt-4">
             <div className="w-24 h-3 bg-[#e3e8ee] dark:bg-gray-700/70 rounded" />
             <div className="w-20 h-3 bg-[#e3e8ee] dark:bg-gray-700/70 rounded" />
           </div>
@@ -186,7 +199,8 @@ export const CreditScoreTile = ({ creditScore, className = 'lg:col-span-3', isLo
         text: 'text-[#533afd] dark:text-[#665efd]',
         bg: 'bg-[#533afd]',
         badgeBg: 'bg-[#533afd]/10 text-[#533afd] dark:bg-[#533afd]/20 dark:text-[#665efd]',
-        label: 'Excellent Health'
+        label: 'Excellent Health',
+        tip: 'Outstanding! Your credit is in great shape. Keep maintaining good financial habits.'
       };
     }
     if (score >= 550) {
@@ -194,53 +208,107 @@ export const CreditScoreTile = ({ creditScore, className = 'lg:col-span-3', isLo
         text: 'text-[#9b6829] dark:text-[#fde68a]',
         bg: 'bg-[#9b6829]',
         badgeBg: 'bg-[#9b6829]/10 text-[#9b6829] dark:bg-[#9b6829]/20 dark:text-[#fde68a]',
-        label: 'Fair Health'
+        label: 'Fair Health',
+        tip: 'Consider reducing overall credit utilization and tracking daily expenses to boost your score.'
       };
     }
     return {
       text: 'text-[#ea2261] dark:text-[#f96bee]',
       bg: 'bg-[#ea2261]',
       badgeBg: 'bg-[#ea2261]/10 text-[#ea2261] dark:bg-[#ea2261]/20 dark:text-[#f96bee]',
-      label: 'Needs Work'
+      label: 'Needs Work',
+      tip: 'Focus on reducing unnecessary spending and paying off balances on time to rebuild your score.'
     };
   };
 
   const scoreConfig = getScoreColorConfig(creditScore);
+
+  const radius = 80;
+  const circumference = Math.PI * radius; // 251.327
+  const scoreProgress = Math.max(0, Math.min(1, (creditScore - 300) / 550));
+  const dashoffset = circumference * (1 - scoreProgress);
 
   return (
     <div className={`w-full ${className}`}>
       <motion.div 
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="stripe-card p-5 h-full flex flex-col justify-between relative overflow-hidden"
+        className="stripe-card p-5 flex flex-col relative overflow-hidden"
       >
-        <div>
-          <div className="flex items-start justify-between mb-3">
-            <div>
-              <span className="text-[10px] text-[#64748d] dark:text-gray-400 font-normal uppercase tracking-wider block">Credit Score</span>
-              <div className="flex items-baseline gap-2 mt-1">
-                <h3 className={`text-3xl font-light font-tnum ${scoreConfig.text}`}>
-                  {creditScore}
-                </h3>
-                <span className="text-xs text-[#64748d] dark:text-gray-400 font-normal font-tnum">/ 850</span>
+        <div className="flex flex-col gap-5">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-[#64748d] dark:text-gray-400 font-normal uppercase tracking-wider block">Credit Score</span>
+          </div>
+
+          {/* SVG Arc Gauge */}
+          <div className="flex flex-col items-center justify-center w-full max-w-[240px] mx-auto -mt-2">
+            <div className="relative w-full">
+              <svg viewBox="0 0 200 110" className="w-full overflow-visible drop-shadow-sm">
+                {/* Background Arc */}
+                <path
+                  d="M 20 100 A 80 80 0 0 1 180 100"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="14"
+                  strokeLinecap="round"
+                  className="text-[#e3e8ee] dark:text-gray-700/80"
+                />
+                {/* Foreground Arc */}
+                <motion.path
+                  d="M 20 100 A 80 80 0 0 1 180 100"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="14"
+                  strokeLinecap="round"
+                  strokeDasharray={circumference}
+                  initial={{ strokeDashoffset: circumference }}
+                  animate={{ strokeDashoffset: dashoffset }}
+                  transition={{ duration: 1.2, ease: "easeOut", delay: 0.1 }}
+                  className={scoreConfig.text} 
+                />
+              </svg>
+              {/* Center Score */}
+              <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex items-baseline gap-1">
+                <span className={`text-4xl sm:text-5xl font-light font-tnum tracking-tight ${scoreConfig.text}`}>{creditScore}</span>
+                <span className="text-xs sm:text-sm text-[#64748d] dark:text-gray-400 font-normal font-tnum">/ 850</span>
               </div>
             </div>
-            <div className={`p-2.5 rounded-full ${scoreConfig.badgeBg}`}>
-              <FaShieldAlt size={15} />
+            {/* Status Label Below Arc */}
+            <div className={`mt-4 px-3.5 py-1.5 rounded-full ${scoreConfig.badgeBg} inline-flex items-center gap-1.5 shadow-sm`}>
+              <FaShieldAlt size={12} />
+              <span className="text-[11px] font-medium uppercase tracking-wider">{scoreConfig.label}</span>
             </div>
           </div>
 
-          {/* Progress bar with Stripe Semantic Tokens */}
-          <div className="w-full bg-[#e3e8ee] dark:bg-gray-700 h-2 rounded-full overflow-hidden mb-3">
-            <div 
-              className={`h-full rounded-full transition-all duration-500 ${scoreConfig.bg}`} 
-              style={{ width: `${Math.min(100, (creditScore / 850) * 100)}%` }}
-            />
+          {/* Meaningful Content to fill empty space */}
+          <div className="flex flex-col gap-3">
+            <div className="p-3 rounded-lg bg-[#f6f9fc] dark:bg-gray-800/40 border border-[#e3e8ee] dark:border-gray-700/50">
+              <p className="text-[11.5px] sm:text-xs text-[#64748d] dark:text-gray-400 leading-relaxed font-normal">
+                <strong className={`font-medium mr-1.5 ${scoreConfig.text}`}>Insight:</strong>
+                {scoreConfig.tip}
+              </p>
+            </div>
+            
+            {/* Factor Breakdown */}
+            <div className="grid grid-cols-3 gap-2">
+              <div className="flex flex-col justify-center p-2 rounded-md border border-[#e3e8ee] dark:border-gray-700/50 bg-[#f6f9fc]/50 dark:bg-gray-800/20">
+                <span className="text-[9px] text-[#64748d] dark:text-gray-400 uppercase tracking-wide mb-0.5">Utilization</span>
+                <span className={`text-[11px] font-medium ${creditScore >= 650 ? 'text-[#059669] dark:text-[#34d399]' : creditScore >= 550 ? 'text-[#9b6829] dark:text-[#fde68a]' : 'text-[#ea2261] dark:text-[#f96bee]'}`}>{creditScore >= 650 ? 'Good' : creditScore >= 550 ? 'Fair' : 'High'}</span>
+              </div>
+              <div className="flex flex-col justify-center p-2 rounded-md border border-[#e3e8ee] dark:border-gray-700/50 bg-[#f6f9fc]/50 dark:bg-gray-800/20">
+                <span className="text-[9px] text-[#64748d] dark:text-gray-400 uppercase tracking-wide mb-0.5">History</span>
+                <span className={`text-[11px] font-medium ${creditScore >= 600 ? 'text-[#059669] dark:text-[#34d399]' : 'text-[#9b6829] dark:text-[#fde68a]'}`}>{creditScore >= 600 ? 'Excellent' : 'Good'}</span>
+              </div>
+              <div className="flex flex-col justify-center p-2 rounded-md border border-[#e3e8ee] dark:border-gray-700/50 bg-[#f6f9fc]/50 dark:bg-gray-800/20">
+                <span className="text-[9px] text-[#64748d] dark:text-gray-400 uppercase tracking-wide mb-0.5">Trend</span>
+                <span className="text-[11px] font-medium text-[#059669] dark:text-[#34d399]">+15 pts</span>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Supporting Details */}
-        <div className="flex items-center justify-between text-[11px] text-[#64748d] dark:text-gray-400 pt-2 border-t border-[#e3e8ee] dark:border-gray-800 mt-auto">
+        <div className="flex items-center justify-between text-[11px] text-[#64748d] dark:text-gray-400 pt-3 border-t border-[#e3e8ee] dark:border-gray-800 mt-auto">
           <span className={`font-normal ${scoreConfig.text}`}>
             {scoreConfig.label}
           </span>
