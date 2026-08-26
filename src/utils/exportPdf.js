@@ -2,7 +2,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
 
-export const exportTransactionsToPdf = (transactions = [], user = null, balance = 0) => {
+export const exportTransactionsToPdf = (transactions = [], user = null, filterType = 'all', searchQuery = '') => {
   const doc = new jsPDF();
 
   const userName = user?.displayName || user?.email?.split('@')[0] || 'Chief Account';
@@ -47,7 +47,18 @@ export const exportTransactionsToPdf = (transactions = [], user = null, balance 
   doc.setFontSize(9);
   doc.setFont('helvetica', 'normal');
   doc.setTextColor(167, 243, 208); // Emerald 200
-  doc.text('Official Personal Financial Statement', 38, 28);
+
+  let subtitle = 'All Transactions';
+  if (filterType !== 'all' || searchQuery.trim()) {
+    const typeLabel = filterType !== 'all' ? (filterType.charAt(0).toUpperCase() + filterType.slice(1) + ' Transactions') : 'Transactions';
+    if (searchQuery.trim()) {
+      subtitle = `${typeLabel} matching '${searchQuery.trim()}'`;
+    } else {
+      subtitle = typeLabel;
+    }
+  }
+
+  doc.text(subtitle, 38, 28);
 
   // User Metadata on the right
   doc.setTextColor(255, 255, 255);

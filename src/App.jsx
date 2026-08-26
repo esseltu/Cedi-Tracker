@@ -310,7 +310,7 @@ function App() {
   };
 
   const handleExportPdf = () => {
-    exportTransactionsToPdf(transactions, user, balance);
+    exportTransactionsToPdf(filteredTransactions, user, filterType, searchQuery);
   };
 
   const handleClearAllTransactions = async () => {
@@ -500,12 +500,12 @@ function App() {
                     <button
                       type="button"
                       onClick={handleExportPdf}
-                      disabled={transactions.length === 0}
+                      disabled={filteredTransactions.length === 0}
                       className="flex-1 sm:flex-none btn-stripe-secondary text-xs !py-1.5 !px-3 justify-center"
                       title="Export Transactions as PDF"
                     >
                       <FaFilePdf size={12} />
-                      <span>PDF</span>
+                      <span>{(filterType !== 'all' || searchQuery.trim()) ? `Export filtered (${filteredTransactions.length})` : 'PDF'}</span>
                     </button>
 
                     <button
@@ -613,12 +613,12 @@ function App() {
                     <button
                       type="button"
                       onClick={handleExportPdf}
-                      disabled={transactions.length === 0}
+                      disabled={filteredTransactions.length === 0}
                       className="flex-1 sm:flex-none btn-stripe-secondary text-xs !py-1.5 !px-3 justify-center"
                       title="Export Transactions as PDF"
                     >
                       <FaFilePdf size={12} />
-                      <span>PDF</span>
+                      <span>{(filterType !== 'all' || searchQuery.trim()) ? `Export filtered (${filteredTransactions.length})` : 'PDF'}</span>
                     </button>
 
                     <button
