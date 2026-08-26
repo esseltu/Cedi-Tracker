@@ -10,6 +10,13 @@
     @apply bg-[#f6f9fc] min-h-screen text-[#0d253d] antialiased;
     @apply dark:bg-[#0b1329] dark:text-[#f6f9fc];
   }
+
+  /* Prevent mobile auto-zoom on inputs */
+  @media screen and (max-width: 767px) {
+    input, textarea, select {
+      font-size: 16px !important;
+    }
+  }
 }
 
 @layer utilities {
