@@ -349,12 +349,12 @@ function App() {
       key="persistent-credit-score-tile"
       creditScore={creditScore}
       isLoading={loading}
-      className={activeTab === 'history' ? 'md:col-span-2 lg:col-span-2' : 'md:col-span-2 lg:col-span-3'} 
+      className={activeTab === 'history' ? 'md:col-span-2 lg:col-span-2' : 'md:col-span-1 md:row-span-2 lg:col-span-3 lg:row-span-1'} 
     />
   );
 
   return (
-    <div className="min-h-screen pb-24 max-w-md md:max-w-3xl lg:max-w-[1200px] mx-auto relative px-4 sm:px-6 lg:px-8 lg:py-6 overflow-x-hidden">
+    <div className="min-h-screen pb-32 max-w-md md:max-w-3xl lg:max-w-[1200px] mx-auto relative px-4 sm:px-6 lg:px-8 lg:py-6 overflow-x-hidden">
       {/* Top Bar */}
       <header className="py-3 sm:py-4 flex justify-between items-center sticky top-0 z-30 bg-[#f6f9fc]/95 dark:bg-[#0b1329]/95 backdrop-blur-md mb-4 lg:mb-6 border-b border-[#e3e8ee] dark:border-gray-800 shadow-[0_2px_10px_-4px_rgba(0,55,112,0.05)] dark:shadow-none -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
         <div>
@@ -367,7 +367,7 @@ function App() {
         </div>
 
         {/* Navigation Tabs (Stripe Segmented Controls) */}
-        <div className="hidden lg:flex items-center gap-1 bg-[#e3e8ee]/60 dark:bg-gray-800/80 p-1 rounded-full border border-[#e3e8ee] dark:border-gray-700">
+        <div className="hidden md:flex items-center gap-1 bg-[#e3e8ee]/60 dark:bg-gray-800/80 p-1 rounded-full border border-[#e3e8ee] dark:border-gray-700">
           <button
             onClick={() => setActiveTab('dashboard')}
             className={`px-4 py-1.5 rounded-full text-xs font-normal transition-all cursor-pointer ${
@@ -434,17 +434,17 @@ function App() {
                 balance={balance} 
                 cardHolder={user?.displayName || 'YOU'} 
                 isLoading={loading}
-                className="md:col-span-2 lg:col-span-3" 
+                className="md:col-span-1 lg:col-span-3" 
               />
               {persistentCreditScoreTile}
 
-              {/* Row 2: Add Transaction (2 cols) | Total Income (2 cols) | Total Expenses (2 cols) */}
+              {/* Row 2: Add Transaction (1 col on md to slot under card) | Total Income | Total Expenses */}
               <AddTransactionTile 
                 onAddClick={() => setShowAddModal(true)} 
-                className="md:col-span-2 lg:col-span-2" 
+                className="md:col-span-1 lg:col-span-2" 
               />
-              <TotalIncomeTile totalIncome={totalIncome} className="md:col-span-1 lg:col-span-2" />
-              <TotalExpensesTile totalExpenses={totalExpenses} className="md:col-span-1 lg:col-span-2" />
+              <TotalIncomeTile totalIncome={totalIncome} transactions={transactions} className="md:col-span-1 lg:col-span-2" />
+              <TotalExpensesTile totalExpenses={totalExpenses} transactions={transactions} className="md:col-span-1 lg:col-span-2" />
 
               {/* Row 3: Low Funds Warning Banner Tile (Full 6 cols) */}
               <LowFundsBannerTile 
@@ -566,8 +566,8 @@ function App() {
             <>
               {/* Row 1: Persistent Credit Score (2 cols) | Total Income (2 cols) | Total Expenses (2 cols) */}
               {persistentCreditScoreTile}
-              <TotalIncomeTile totalIncome={totalIncome} className="md:col-span-1 lg:col-span-2" />
-              <TotalExpensesTile totalExpenses={totalExpenses} className="md:col-span-1 lg:col-span-2" />
+              <TotalIncomeTile totalIncome={totalIncome} transactions={transactions} className="md:col-span-1 lg:col-span-2" />
+              <TotalExpensesTile totalExpenses={totalExpenses} transactions={transactions} className="md:col-span-1 lg:col-span-2" />
 
               {/* Row 2: Full Transaction History Table (Full 6 cols - Add Transaction tile omitted) */}
               <div className="md:col-span-2 lg:col-span-6 space-y-4 pt-2">
@@ -649,36 +649,49 @@ function App() {
         </div>
       </main>
 
-      {/* Mobile Bottom Navigation */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#f6f9fc]/90 dark:bg-[#0b1329]/90 backdrop-blur-md border-t border-[#e3e8ee] dark:border-gray-800">
-        <div className="flex justify-around items-center pt-3 pb-5">
+      {/* Mobile Bottom Navigation (Floating Pill) */}
+      <div className="md:hidden fixed bottom-5 left-5 right-5 z-40">
+        <div className="relative h-[64px] bg-[#f6f9fc]/80 dark:bg-[#0b1329]/80 backdrop-blur-[16px] border border-white/40 dark:border-white/10 rounded-full shadow-[0_8px_32px_rgba(0,0,0,0.15)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.5)] flex justify-around items-center px-2">
+            
+          {/* Dashboard Tab */}
           <button
             onClick={() => setActiveTab('dashboard')}
-            className={`flex flex-col items-center gap-1 transition-all cursor-pointer ${
-              activeTab === 'dashboard' ? 'text-[#533afd] dark:text-[#665efd]' : 'text-[#64748d] dark:text-gray-400'
+            className={`flex flex-col items-center justify-center gap-1 w-16 transition-all duration-300 ease-out cursor-pointer ${
+              activeTab === 'dashboard' ? 'text-[#533afd] dark:text-[#665efd] scale-[1.15]' : 'text-[#64748d] dark:text-gray-400 scale-100'
             }`}
           >
             <FaHome size={20} />
-            <span className="text-[10px] font-medium">Home</span>
+            <span className={`text-[10px] transition-all duration-300 ${activeTab === 'dashboard' ? 'font-semibold' : 'font-medium'}`}>
+              Home
+            </span>
           </button>
+
+          {/* History Tab */}
           <button
             onClick={() => setActiveTab('history')}
-            className={`flex flex-col items-center gap-1 transition-all cursor-pointer ${
-              activeTab === 'history' ? 'text-[#533afd] dark:text-[#665efd]' : 'text-[#64748d] dark:text-gray-400'
+            className={`flex flex-col items-center justify-center gap-1 w-16 transition-all duration-300 ease-out cursor-pointer ${
+              activeTab === 'history' ? 'text-[#533afd] dark:text-[#665efd] scale-[1.15]' : 'text-[#64748d] dark:text-gray-400 scale-100'
             }`}
           >
-            <FaHistory size={18} />
-            <span className="text-[10px] font-medium">History</span>
+            <FaHistory size={20} />
+            <span className={`text-[10px] transition-all duration-300 ${activeTab === 'history' ? 'font-semibold' : 'font-medium'}`}>
+              History
+            </span>
           </button>
+
+          {/* Insights Tab */}
           <button
             onClick={() => setActiveTab('analysis')}
-            className={`flex flex-col items-center gap-1 transition-all cursor-pointer ${
-              activeTab === 'analysis' ? 'text-[#533afd] dark:text-[#665efd]' : 'text-[#64748d] dark:text-gray-400'
+            className={`flex flex-col items-center justify-center gap-1 w-16 transition-all duration-300 ease-out cursor-pointer ${
+              activeTab === 'analysis' ? 'text-[#533afd] dark:text-[#665efd] scale-[1.15]' : 'text-[#64748d] dark:text-gray-400 scale-100'
             }`}
           >
-            <FaChartPie size={18} />
-            <span className="text-[10px] font-medium">Insights</span>
+            <FaChartPie size={20} />
+            <span className={`text-[10px] transition-all duration-300 ${activeTab === 'analysis' ? 'font-semibold' : 'font-medium'}`}>
+              Insights
+            </span>
           </button>
+
         </div>
       </div>
 

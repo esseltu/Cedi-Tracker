@@ -1,7 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaPlus, FaCalendarAlt, FaShieldAlt, FaExclamationTriangle, FaCheckCircle, FaInfoCircle, FaArrowDown, FaWallet, FaReceipt } from 'react-icons/fa';
+import { FaPlus, FaCalendarAlt, FaShieldAlt, FaExclamationTriangle, FaCheckCircle, FaInfoCircle, FaArrowDown, FaWallet, FaReceipt, FaWifi } from 'react-icons/fa';
 import { formatCurrency } from '../utils/currency';
+import { ResponsiveContainer, BarChart, Bar, LineChart, Line, Tooltip, XAxis } from 'recharts';
+
+const CustomXAxisTick = ({ x, y, payload, isExpense }) => {
+  const isToday = payload.index === 6;
+  return (
+    <text
+      x={x}
+      y={y + 12}
+      textAnchor="middle"
+      fill={isToday ? (isExpense ? '#ea2261' : '#533afd') : '#64748d'}
+      fontSize={10}
+      fontWeight={isToday ? 600 : 400}
+    >
+      {payload.value}
+    </text>
+  );
+};
 
 /**
  * Animated Balance Count-Up Counter
@@ -66,87 +83,125 @@ export const CediCardTile = ({ balance, cardHolder = 'YOU', last4 = '1234', clas
       <motion.div
         initial={{ y: 15, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        className="relative overflow-hidden rounded-xl shadow-[0_8px_24px_rgba(0,55,112,0.12)] text-white select-none border border-white/10 h-full min-h-[200px] flex flex-col justify-between"
+        className="relative overflow-hidden rounded-xl shadow-[0_12px_24px_rgba(0,0,0,0.2)] text-white select-none h-full md:h-auto md:aspect-[1.586/1] md:max-w-[500px] lg:h-full lg:aspect-auto min-h-[220px] flex flex-col justify-between"
       >
-        {/* Stripe Brand Dark Navy to Deep Indigo Background */}
+        {/* Underlying colorful elements (behind the glass) */}
+        <div className="absolute inset-0 bg-[#0d253d] dark:bg-[#0b1329] z-0" />
+        <div className="absolute -top-12 -right-12 w-48 h-48 bg-[#ea2261]/60 rounded-full blur-3xl pointer-events-none z-0" />
+        <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-[#533afd]/70 rounded-full blur-3xl pointer-events-none z-0" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-[#4434d4]/40 rounded-full blur-2xl pointer-events-none z-0" />
+
+        {/* Glassmorphism Surface */}
         <div 
-          className="absolute inset-0"
+          className="absolute inset-0 z-10 backdrop-blur-[14px] border border-white/20"
           style={{
-            background: 'linear-gradient(135deg, #1c1e54 0%, #0d253d 55%, #4434d4 100%)'
+            background: 'linear-gradient(135deg, rgba(28, 30, 84, 0.45) 0%, rgba(13, 37, 61, 0.35) 55%, rgba(68, 52, 212, 0.3) 100%)'
           }}
         />
 
-        {/* Atmospheric Mesh Accents (Stripe Signature Ruby & Indigo Blurs) */}
-        <div className="absolute -top-10 -right-10 w-44 h-44 bg-[#ea2261]/25 rounded-full blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-10 -left-10 w-44 h-44 bg-[#533afd]/30 rounded-full blur-3xl pointer-events-none" />
-
-        {/* Faint Grid Texture */}
+        {/* Diagonal Light Reflection / Sheen */}
         <div 
-          className="absolute inset-0 opacity-[0.08] pointer-events-none"
+          className="absolute inset-0 z-10 pointer-events-none mix-blend-overlay"
+          style={{
+            background: 'linear-gradient(105deg, transparent 25%, rgba(255,255,255,0.15) 30%, transparent 40%, transparent 45%, rgba(255,255,255,0.08) 50%, transparent 55%)'
+          }}
+        />
+
+        {/* Faint Grid Texture on the glass */}
+        <div 
+          className="absolute inset-0 opacity-[0.05] pointer-events-none z-10"
           style={{
             backgroundImage: 'repeating-linear-gradient(135deg, rgba(255,255,255,0.2) 0px, rgba(255,255,255,0.2) 1px, transparent 1px, transparent 8px)'
           }}
         />
 
-        {/* Card Content */}
-        <div className="relative z-10 p-6 flex flex-col justify-between h-full min-h-[200px]">
-          {/* Top Row: EMV Metallic Chip + CEDI CARD Label + Stripe Brand Circles Logo */}
+        {/* Card Content (z-20 so it sits above the glass) */}
+        <div className="relative z-20 p-6 flex flex-col justify-between h-full min-h-[220px]">
+          {/* Top Row: Logo & Network Icon */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              {/* Silver/Indigo Chrome EMV Chip */}
+              {/* Silver Chrome EMV Chip */}
               <div 
-                className="relative w-10 h-7 rounded-sm border border-white/30 shadow-sm overflow-hidden flex-shrink-0"
+                className="relative w-11 h-8 rounded-md border border-white/40 shadow-sm overflow-hidden flex-shrink-0"
                 style={{
-                  background: 'linear-gradient(135deg, #e3e8ee 0%, #a8c3de 50%, #64748d 100%)'
+                  background: 'linear-gradient(135deg, #f8fafc 0%, #cbd5e1 50%, #94a3b8 100%)'
                 }}
               >
-                <div className="absolute inset-[2px] rounded-[2px] border border-black/10 pointer-events-none" />
-                <div className="absolute left-[3px] top-[2px] bottom-[2px] w-[8px] rounded-sm bg-black/10 border-r border-black/15" />
-                <div className="absolute right-[3px] top-[2px] bottom-[2px] w-[10px] rounded-sm bg-black/5" />
-                <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-px bg-black/20" />
+                <div className="absolute inset-[2px] rounded-[3px] border border-black/20 pointer-events-none" />
+                <div className="absolute left-[4px] top-[2px] bottom-[2px] w-[10px] rounded-[2px] bg-black/10 border-r border-black/20" />
+                <div className="absolute right-[4px] top-[2px] bottom-[2px] w-[12px] rounded-[2px] bg-black/5" />
+                <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-px bg-black/25" />
               </div>
-
-              {/* Watermark Label per DESIGN.md micro-cap */}
-              <span className="text-[10px] font-normal uppercase tracking-[0.15em] text-white/60">
+              <span 
+                className="text-xs font-semibold uppercase tracking-[0.2em] text-white/90"
+                style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}
+              >
                 CEDI CARD
               </span>
             </div>
 
-            {/* Stripe Accent Overlapping Circles Card Logo */}
-            <div className="flex items-center relative pr-1 opacity-95">
-              <div className="w-6 h-6 rounded-full bg-[#533afd] shadow-sm" />
-              <div className="w-6 h-6 rounded-full bg-[#ea2261] -ml-2.5 opacity-90 backdrop-blur-sm shadow-sm" />
+            {/* Network Icon */}
+            <div className="flex items-center relative pr-1">
+              <div className="w-7 h-7 rounded-full bg-[#533afd] shadow-sm" />
+              <div className="w-7 h-7 rounded-full bg-[#ea2261] -ml-3 opacity-90 backdrop-blur-sm shadow-sm mix-blend-multiply dark:mix-blend-normal" />
             </div>
           </div>
 
-          {/* Middle: Masked Card Number */}
-          <div className="my-auto pt-2 pb-2">
-            <div className="font-mono text-base md:text-lg tracking-[0.2em] text-white/90 font-normal drop-shadow-sm flex items-center gap-3 font-tnum">
+          {/* Middle Row: Masked Card Number */}
+          <div className="mt-8 mb-6">
+            <div 
+              className="font-mono text-xl md:text-2xl tracking-[0.3em] text-white font-medium drop-shadow-md flex items-center font-tnum"
+              style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
+            >
               <span>••••</span>
-              <span>••••</span>
-              <span>••••</span>
-              <span>{last4}</span>
+              <span className="mx-3">••••</span>
+              <span className="mx-3">••••</span>
+              <span className="ml-3">{last4}</span>
             </div>
           </div>
 
-          {/* Bottom Row: Card Holder & Visual Focal Point (Balance with Count-Up Animation) */}
+          {/* Bottom Row: Card Holder, Exp Date, Balance, NFC */}
           <div className="flex items-end justify-between">
-            <div>
-              <p className="text-[10px] uppercase tracking-[0.1px] font-normal text-white/50 mb-0.5">
-                CARD HOLDER
-              </p>
-              <p className="text-xs font-normal text-white/90 tracking-wide uppercase">
-                {cardHolder}
-              </p>
+            {/* Left Side: Holder & Date */}
+            <div className="flex gap-8">
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.1em] font-normal text-white/70 mb-1">
+                  CARD HOLDER
+                </p>
+                <p 
+                  className="text-sm font-medium text-white tracking-widest uppercase" 
+                  style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}
+                >
+                  {cardHolder}
+                </p>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-[0.1em] font-normal text-white/70 mb-1">
+                  EXP DATE
+                </p>
+                <p 
+                  className="text-sm font-medium text-white tracking-widest font-tnum" 
+                  style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}
+                >
+                  12/29
+                </p>
+              </div>
             </div>
 
-            <div className="text-right">
-              <p className="text-[10px] uppercase tracking-[0.1px] font-normal text-white/50 mb-0.5">
-                BALANCE
-              </p>
-              <p className="text-2xl md:text-3xl font-light text-white tracking-tight font-tnum">
-                <AnimatedBalance value={balance} />
-              </p>
+            {/* Right Side: Balance & Contactless */}
+            <div className="text-right flex flex-col items-end gap-2">
+              <div className="flex flex-col items-end">
+                <p className="text-[10px] uppercase tracking-[0.1em] font-normal text-white/70 mb-1">
+                  BALANCE
+                </p>
+                <p 
+                  className="text-lg md:text-xl font-medium text-white tracking-tight font-tnum" 
+                  style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}
+                >
+                  <AnimatedBalance value={balance} />
+                </p>
+              </div>
+              <FaWifi size={22} className="rotate-90 text-white/80" />
             </div>
           </div>
         </div>
@@ -233,7 +288,7 @@ export const CreditScoreTile = ({ creditScore, className = 'lg:col-span-3', isLo
       <motion.div 
         initial={{ opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="stripe-card p-5 flex flex-col relative overflow-hidden"
+        className="stripe-card p-5 flex flex-col relative overflow-hidden h-full"
       >
         <div className="flex flex-col gap-5">
           <div className="flex items-center justify-between">
@@ -354,25 +409,104 @@ export const AddTransactionTile = ({ onAddClick, className = 'lg:col-span-2' }) 
 /**
  * 4. TOTAL INCOME TILE (lg:col-span-2)
  */
-export const TotalIncomeTile = ({ totalIncome, className = 'lg:col-span-2' }) => {
+export const TotalIncomeTile = ({ totalIncome, transactions = [], className = 'lg:col-span-2' }) => {
+  const { chartData, comparisonNode, categoriesText, hasEnoughChartData } = React.useMemo(() => {
+    const incomeTx = transactions.filter(t => t.type === 'income');
+    
+    // 1. Comparison logic
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+
+    const thisMonthStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+    const lastMonthStr = `${lastMonthYear}-${String(lastMonth + 1).padStart(2, '0')}`;
+
+    const thisMonthTotal = incomeTx.filter(t => (t.date || '').startsWith(thisMonthStr)).reduce((sum, t) => sum + Number(t.amount), 0);
+    const lastMonthTotal = incomeTx.filter(t => (t.date || '').startsWith(lastMonthStr)).reduce((sum, t) => sum + Number(t.amount), 0);
+
+    let comparisonNode = null;
+    if (lastMonthTotal > 0) {
+      const diff = thisMonthTotal - lastMonthTotal;
+      const pct = Math.round((diff / lastMonthTotal) * 100);
+      const isUp = pct >= 0;
+      comparisonNode = (
+        <div className="hidden lg:flex items-center gap-1 mt-1 text-[11px]">
+          <span className={isUp ? 'text-emerald-500' : 'text-rose-500'}>
+            {isUp ? '↑' : '↓'} {Math.abs(pct)}%
+          </span>
+          <span className="text-[#533afd]/70 dark:text-[#665efd]/70">vs last month</span>
+        </div>
+      );
+    }
+
+    // 2. Trend chart (Last 7 days)
+    const chartData = [];
+    let nonZeroDays = 0;
+    const dayFormatter = new Intl.DateTimeFormat('en-US', { weekday: 'short' });
+    
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const dayTotal = incomeTx.filter(t => t.date === dateStr).reduce((sum, t) => sum + Number(t.amount), 0);
+      if (dayTotal > 0) nonZeroDays++;
+      chartData.push({ 
+        name: dayFormatter.format(d), 
+        amount: dayTotal 
+      });
+    }
+
+    return { 
+      chartData, 
+      comparisonNode, 
+      hasEnoughChartData: nonZeroDays >= 1 
+    };
+  }, [transactions]);
+
   return (
     <div className={`w-full ${className}`}>
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="stripe-card p-5 h-full flex flex-col justify-between bg-[#533afd]/5 dark:bg-[#533afd]/15 border border-[#533afd]/20"
+        className="stripe-card p-5 h-full flex flex-col bg-[#533afd]/5 dark:bg-[#533afd]/15 border border-[#533afd]/20"
       >
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] text-[#533afd] dark:text-[#665efd] font-normal uppercase tracking-wider">
-            Total Income
-          </span>
-          <div className="w-7 h-7 rounded-full bg-[#533afd]/10 text-[#533afd] dark:bg-[#533afd]/20 dark:text-[#665efd] flex items-center justify-center">
-            <FaWallet size={12} />
+        <div className="flex flex-col justify-between h-full">
+          {/* Top: Header */}
+          <div className="flex items-center justify-between mb-4 lg:mb-2">
+            <span className="text-[10px] text-[#533afd] dark:text-[#665efd] font-normal uppercase tracking-wider">
+              Total Income
+            </span>
+            <div className="w-7 h-7 rounded-full bg-[#533afd]/10 text-[#533afd] dark:bg-[#533afd]/20 dark:text-[#665efd] flex items-center justify-center">
+              <FaWallet size={12} />
+            </div>
+          </div>
+          
+          {/* Upper-Middle: Amount & Comparison */}
+          <div className="mb-auto lg:mb-0 lg:mt-2">
+            <p className="text-2xl font-light font-tnum text-[#533afd] dark:text-[#665efd] tracking-tight">
+              {formatCurrency(totalIncome)}
+            </p>
+            {comparisonNode}
+          </div>
+
+          {/* Bottom: Desktop Sparkline with X-Axis */}
+          <div className="hidden lg:flex flex-col flex-1 min-h-[70px] mt-3 justify-end">
+            {hasEnoughChartData ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={<CustomXAxisTick isExpense={false} />} />
+                  <Line type="monotone" dataKey="amount" stroke="#533afd" strokeWidth={2} dot={false} isAnimationActive={false} />
+                </LineChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-xs text-[#533afd]/50 dark:text-[#665efd]/50 italic pb-4">
+                Not enough data yet
+              </div>
+            )}
           </div>
         </div>
-        <p className="text-2xl font-light font-tnum text-[#533afd] dark:text-[#665efd] tracking-tight">
-          {formatCurrency(totalIncome)}
-        </p>
       </motion.div>
     </div>
   );
@@ -381,25 +515,104 @@ export const TotalIncomeTile = ({ totalIncome, className = 'lg:col-span-2' }) =>
 /**
  * 5. TOTAL EXPENSES TILE (lg:col-span-2)
  */
-export const TotalExpensesTile = ({ totalExpenses, className = 'lg:col-span-2' }) => {
+export const TotalExpensesTile = ({ totalExpenses, transactions = [], className = 'lg:col-span-2' }) => {
+  const { chartData, comparisonNode, categoriesText, hasEnoughChartData } = React.useMemo(() => {
+    const expenseTx = transactions.filter(t => t.type === 'expense');
+    
+    // 1. Comparison logic
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+    const lastMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const lastMonthYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+
+    const thisMonthStr = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}`;
+    const lastMonthStr = `${lastMonthYear}-${String(lastMonth + 1).padStart(2, '0')}`;
+
+    const thisMonthTotal = expenseTx.filter(t => (t.date || '').startsWith(thisMonthStr)).reduce((sum, t) => sum + Number(t.amount), 0);
+    const lastMonthTotal = expenseTx.filter(t => (t.date || '').startsWith(lastMonthStr)).reduce((sum, t) => sum + Number(t.amount), 0);
+
+    let comparisonNode = null;
+    if (lastMonthTotal > 0) {
+      const diff = thisMonthTotal - lastMonthTotal;
+      const pct = Math.round((diff / lastMonthTotal) * 100);
+      const isUp = pct > 0;
+      comparisonNode = (
+        <div className="hidden lg:flex items-center gap-1 mt-1 text-[11px]">
+          <span className={isUp ? 'text-rose-500' : 'text-emerald-500'}>
+            {isUp ? '↑' : '↓'} {Math.abs(pct)}%
+          </span>
+          <span className="text-[#ea2261]/70 dark:text-[#f96bee]/70">vs last month</span>
+        </div>
+      );
+    }
+
+    // 2. Trend chart (Last 7 days)
+    const chartData = [];
+    let nonZeroDays = 0;
+    const dayFormatter = new Intl.DateTimeFormat('en-US', { weekday: 'short' });
+    
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const dayTotal = expenseTx.filter(t => t.date === dateStr).reduce((sum, t) => sum + Number(t.amount), 0);
+      if (dayTotal > 0) nonZeroDays++;
+      chartData.push({ 
+        name: dayFormatter.format(d), 
+        amount: dayTotal 
+      });
+    }
+
+    return { 
+      chartData, 
+      comparisonNode, 
+      hasEnoughChartData: nonZeroDays >= 1 
+    };
+  }, [transactions]);
+
   return (
     <div className={`w-full ${className}`}>
       <motion.div 
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="stripe-card p-5 h-full flex flex-col justify-between bg-[#ea2261]/5 dark:bg-[#ea2261]/15 border border-[#ea2261]/20"
+        className="stripe-card p-5 h-full flex flex-col bg-[#ea2261]/5 dark:bg-[#ea2261]/15 border border-[#ea2261]/20"
       >
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-[10px] text-[#ea2261] dark:text-[#f96bee] font-normal uppercase tracking-wider">
-            Total Expenses
-          </span>
-          <div className="w-7 h-7 rounded-full bg-[#ea2261]/10 text-[#ea2261] dark:bg-[#ea2261]/20 dark:text-[#f96bee] flex items-center justify-center">
-            <FaReceipt size={12} />
+        <div className="flex flex-col justify-between h-full">
+          {/* Top: Header */}
+          <div className="flex items-center justify-between mb-4 lg:mb-2">
+            <span className="text-[10px] text-[#ea2261] dark:text-[#f96bee] font-normal uppercase tracking-wider">
+              Total Expenses
+            </span>
+            <div className="w-7 h-7 rounded-full bg-[#ea2261]/10 text-[#ea2261] dark:bg-[#ea2261]/20 dark:text-[#f96bee] flex items-center justify-center">
+              <FaReceipt size={12} />
+            </div>
+          </div>
+          
+          {/* Upper-Middle: Amount & Comparison */}
+          <div className="mb-auto lg:mb-0 lg:mt-2">
+            <p className="text-2xl font-light font-tnum text-[#ea2261] dark:text-[#f96bee] tracking-tight">
+              {formatCurrency(totalExpenses)}
+            </p>
+            {comparisonNode}
+          </div>
+
+          {/* Bottom: Desktop Sparkline with X-Axis */}
+          <div className="hidden lg:flex flex-col flex-1 min-h-[70px] mt-3 justify-end">
+            {hasEnoughChartData ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
+                  <XAxis dataKey="name" axisLine={false} tickLine={false} tick={<CustomXAxisTick isExpense={true} />} />
+                  <Bar dataKey="amount" fill="#ea2261" radius={[2, 2, 0, 0]} isAnimationActive={false} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-full text-xs text-[#ea2261]/50 dark:text-[#f96bee]/50 italic pb-4">
+                Not enough data yet
+              </div>
+            )}
           </div>
         </div>
-        <p className="text-2xl font-light font-tnum text-[#ea2261] dark:text-[#f96bee] tracking-tight">
-          {formatCurrency(totalExpenses)}
-        </p>
       </motion.div>
     </div>
   );
