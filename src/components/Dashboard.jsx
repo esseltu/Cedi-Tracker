@@ -147,8 +147,8 @@ export const CediCardTile = ({ balance, cardHolder = 'YOU', last4 = '1234', clas
             </div>
           </div>
 
-          {/* Middle Row: Masked Card Number */}
-          <div className="mt-8 mb-6">
+          {/* Middle Row: Masked Card Number & NFC */}
+          <div className="mt-8 mb-6 flex items-center">
             <div 
               className="font-mono text-xl md:text-2xl tracking-[0.3em] text-white font-medium drop-shadow-md flex items-center font-tnum"
               style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
@@ -158,38 +158,26 @@ export const CediCardTile = ({ balance, cardHolder = 'YOU', last4 = '1234', clas
               <span className="mx-3">••••</span>
               <span className="ml-3">{last4}</span>
             </div>
+            <FaWifi size={22} className="rotate-90 text-white/80 ml-6" />
           </div>
 
-          {/* Bottom Row: Card Holder, Exp Date, Balance, NFC */}
-          <div className="flex items-end justify-between">
-            {/* Left Side: Holder & Date */}
-            <div className="flex gap-8">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.1em] font-normal text-white/70 mb-1">
-                  CARD HOLDER
-                </p>
-                <p 
-                  className="text-sm font-medium text-white tracking-widest uppercase" 
-                  style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}
-                >
-                  {cardHolder}
-                </p>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.1em] font-normal text-white/70 mb-1">
-                  EXP DATE
-                </p>
-                <p 
-                  className="text-sm font-medium text-white tracking-widest font-tnum" 
-                  style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}
-                >
-                  12/29
-                </p>
-              </div>
+          {/* Bottom Row: Card Holder, Balance, NFC */}
+          <div className="flex items-end justify-between w-full gap-4">
+            {/* Left Side: Holder */}
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] uppercase tracking-[0.1em] font-normal text-white/70 mb-1">
+                CARD HOLDER
+              </p>
+              <p 
+                className="text-sm font-medium text-white tracking-widest uppercase truncate" 
+                style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}
+              >
+                {cardHolder}
+              </p>
             </div>
 
-            {/* Right Side: Balance & Contactless */}
-            <div className="text-right flex flex-col items-end gap-2">
+            {/* Right Side: Balance */}
+            <div className="flex-1 flex flex-col items-end text-right">
               <div className="flex flex-col items-end">
                 <p className="text-[10px] uppercase tracking-[0.1em] font-normal text-white/70 mb-1">
                   BALANCE
@@ -201,7 +189,6 @@ export const CediCardTile = ({ balance, cardHolder = 'YOU', last4 = '1234', clas
                   <AnimatedBalance value={balance} />
                 </p>
               </div>
-              <FaWifi size={22} className="rotate-90 text-white/80" />
             </div>
           </div>
         </div>
