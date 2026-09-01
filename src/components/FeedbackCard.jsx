@@ -59,6 +59,16 @@ export const useInsightsAnalysis = (transactions = [], balance = 0) => {
       .map(([name, value]) => ({ name, value }))
       .filter(item => item.value > 0);
 
+    const allTimeTotalSpent = expenses.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+    const allTimeCategoryTotals = expenses.reduce((acc, t) => {
+      acc[t.category] = (acc[t.category] || 0) + (Number(t.amount) || 0);
+      return acc;
+    }, {});
+
+    const allTimeChartData = Object.entries(allTimeCategoryTotals)
+      .map(([name, value]) => ({ name, value }))
+      .filter(item => item.value > 0);
+
     const advice = [];
     const foodSpent = categoryTotals['Food'] || 0;
     const transportSpent = categoryTotals['Transport'] || 0;
@@ -163,7 +173,8 @@ export const useInsightsAnalysis = (transactions = [], balance = 0) => {
       totalSpent, totalIncome, categoryTotals, dailyCategoryTotals, chartData, advice, 
       requestSuggestion, topCategoryName, topCategoryValue, topCategoryPct, 
       dailyCap, todaysExpenses, todaysCappedExpenses, todaysUncappedExpenses, todayPct, 
-      lastSavingsTx, health 
+      lastSavingsTx, health,
+      allTimeTotalSpent, allTimeChartData
     };
   }, [transactions, balance, budgets, highlightedCategory]);
 };
@@ -172,72 +183,109 @@ export const useInsightsAnalysis = (transactions = [], balance = 0) => {
  * SPENDING BREAKDOWN BENTO TILE (lg:col-span-3)
  */
 export const SpendingBreakdownTile = ({ analysis, className = 'lg:col-span-3' }) => {
-  if (analysis.totalSpent > 0) {
+  const [scope, setScope] = useState('thisMonth'); // 'thisMonth' | 'allTime'
+  
+  const currentTotalSpent = scope === 'thisMonth' ? analysis.totalSpent : analysis.allTimeTotalSpent;
+  const currentChartData = scope === 'thisMonth' ? analysis.chartData : analysis.allTimeChartData;
+
+  if (analysis.allTimeTotalSpent > 0) {
     return (
       <div className={`w-full ${className}`}>
         <div className="stripe-card p-6 h-full flex flex-col justify-between">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-base font-light text-[#0d253d] dark:text-white tracking-tight">Spending Breakdown</h3>
-            <span className="text-xs text-[#64748d] dark:text-gray-400 font-normal font-tnum">
-              {analysis.chartData.length} Categories
-            </span>
-          </div>
-
-          <div className="h-52 w-full relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={analysis.chartData}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={52}
-                  outerRadius={75}
-                  paddingAngle={4}
-                  dataKey="value"
-                >
-                  {analysis.chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[entry.name] || COLORS['Other']} />
-                  ))}
-                </Pie>
-                <Tooltip 
-                  contentStyle={{
-                    backgroundColor: '#0d253d',
-                    borderRadius: '8px',
-                    border: '1px solid rgba(255, 255, 255, 0.15)',
-                    color: '#ffffff',
-                    fontSize: '12px',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)'
-                  }}
-                  itemStyle={{ color: '#ffffff' }}
-                  formatter={(value) => formatCurrency(Number(value))}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="text-center">
-                <span className="text-[10px] uppercase tracking-wider text-[#64748d] dark:text-gray-400 font-normal block">
-                  Total Spent
-                </span>
-                <p className="text-lg font-light text-[#0d253d] dark:text-white font-tnum">
-                  {formatCurrency(analysis.totalSpent)}
-                </p>
-              </div>
+            <div className="flex p-0.5 bg-[#f6f9fc] dark:bg-gray-800/80 rounded-full border border-[#e3e8ee] dark:border-gray-700 w-[140px]">
+              <button
+                type="button"
+                onClick={() => setScope('thisMonth')}
+                className={`flex-1 py-1 text-[10px] font-normal rounded-full transition-all cursor-pointer ${
+                  scope === 'thisMonth' 
+                    ? 'bg-[#533afd] text-white shadow-sm font-medium' 
+                    : 'text-[#64748d] dark:text-gray-400 hover:text-[#0d253d] dark:hover:text-white'
+                }`}
+              >
+                This Month
+              </button>
+              <button
+                type="button"
+                onClick={() => setScope('allTime')}
+                className={`flex-1 py-1 text-[10px] font-normal rounded-full transition-all cursor-pointer ${
+                  scope === 'allTime' 
+                    ? 'bg-[#533afd] text-white shadow-sm font-medium' 
+                    : 'text-[#64748d] dark:text-gray-400 hover:text-[#0d253d] dark:hover:text-white'
+                }`}
+              >
+                All Time
+              </button>
             </div>
           </div>
 
-          {/* Category Legend Grid */}
-          <div className="mt-3 pt-3 border-t border-[#e3e8ee] dark:border-gray-800 grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
-            {analysis.chartData.map((item) => (
-              <div key={item.name} className="flex items-center gap-2 min-w-0">
-                <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[item.name] || COLORS['Other'] }} />
-                <div className="min-w-0 flex-1">
-                  <span className="text-[#64748d] dark:text-gray-400 font-normal block text-[11px] truncate">{item.name}</span>
-                  <span className="font-normal font-tnum text-[#0d253d] dark:text-white block truncate">{formatCurrency(Number(item.value))}</span>
+          {currentTotalSpent > 0 ? (
+            <>
+              <div className="h-52 w-full relative">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={currentChartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={52}
+                      outerRadius={75}
+                      paddingAngle={4}
+                      dataKey="value"
+                    >
+                      {currentChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={COLORS[entry.name] || COLORS['Other']} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: '#0d253d',
+                        borderRadius: '8px',
+                        border: '1px solid rgba(255, 255, 255, 0.15)',
+                        color: '#ffffff',
+                        fontSize: '12px',
+                        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.25)'
+                      }}
+                      itemStyle={{ color: '#ffffff' }}
+                      formatter={(value) => formatCurrency(Number(value))}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="text-center">
+                    <span className="text-[10px] uppercase tracking-wider text-[#64748d] dark:text-gray-400 font-normal block leading-tight">
+                      Total Spent<br/>{scope === 'thisMonth' ? 'This Month' : 'All Time'}
+                    </span>
+                    <p className="text-lg font-light text-[#0d253d] dark:text-white font-tnum mt-0.5">
+                      {formatCurrency(currentTotalSpent)}
+                    </p>
+                  </div>
                 </div>
               </div>
-            ))}
-          </div>
+
+              {/* Category Legend Grid */}
+              <div className="mt-3 pt-3 border-t border-[#e3e8ee] dark:border-gray-800 grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+                {currentChartData.map((item) => (
+                  <div key={item.name} className="flex items-center gap-2 min-w-0">
+                    <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: COLORS[item.name] || COLORS['Other'] }} />
+                    <div className="min-w-0 flex-1">
+                      <span className="text-[#64748d] dark:text-gray-400 font-normal block text-[11px] truncate">{item.name}</span>
+                      <span className="font-normal font-tnum text-[#0d253d] dark:text-white block truncate">{formatCurrency(Number(item.value))}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <div className="flex-1 flex flex-col items-center justify-center text-center">
+              <div className="w-10 h-10 rounded-full bg-[#f6f9fc] dark:bg-gray-800 text-[#64748d] flex items-center justify-center mb-3">
+                <FaChartPie size={16} />
+              </div>
+              <p className="text-xs text-[#64748d] dark:text-gray-400">No expenses logged {scope === 'thisMonth' ? 'this month' : 'yet'}.</p>
+            </div>
+          )}
         </div>
       </div>
     );
