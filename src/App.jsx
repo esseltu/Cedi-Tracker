@@ -238,7 +238,7 @@ function App() {
         createdAt: serverTimestamp()
       });
       
-      if (transaction.type === 'income') {
+      if (transaction.type === 'income' && transaction.category === 'Salary') {
         setLastIncome(transaction);
       }
 
