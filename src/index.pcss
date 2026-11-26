@@ -74,3 +74,84 @@
   background: #a8c3de;
   border-radius: 10px;
 }
+
+.cedi-flip {
+  container-type: inline-size;
+  width: 100%;
+  max-width: 500px;
+  aspect-ratio: 1.586 / 1;
+  perspective: 1000px;
+  color: #fff;
+  cursor: pointer;
+}
+.cedi-flip-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.8s;
+  transform-style: preserve-3d;
+}
+.cedi-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 1rem;
+  background: #171717;
+  box-shadow: rgba(0,0,0,.4) 0 2px 2px, rgba(0,0,0,.3) 0 7px 13px -3px, rgba(0,0,0,.2) 0 -1px 0 inset;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  overflow: hidden;
+}
+.cedi-back { transform: rotateY(180deg); }
+
+/* flip: hover on desktop, tap on touch */
+@media (hover: hover) {
+  .cedi-flip:hover .cedi-flip-inner { transform: rotateY(180deg); }
+}
+@media (hover: none) {
+  .cedi-flip-inner.is-flipped { transform: rotateY(180deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cedi-flip-inner { transition: none; }
+}
+
+/* front layout (all sizes scale with card width) */
+.cedi-front {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 6cqw;
+}
+.cedi-row { display: flex; align-items: center; justify-content: space-between; gap: 3cqw; }
+.cedi-bottom { align-items: flex-end; }
+.cedi-chip {
+  width: 11cqw; height: 8.5cqw; border-radius: 1.5cqw;
+  background:
+    linear-gradient(90deg, transparent 32%, rgba(0,0,0,.25) 33% 35%, transparent 36% 64%, rgba(0,0,0,.25) 65% 67%, transparent 68%),
+    linear-gradient(180deg, transparent 45%, rgba(0,0,0,.25) 46% 48%, transparent 49%),
+    linear-gradient(135deg, #f5d36b, #c9972b);
+}
+.cedi-brand { flex: 1; font-size: 3.2cqw; letter-spacing: .2em; }
+.cedi-logo { width: 9cqw; height: 9cqw; }
+.cedi-number-row { display: flex; align-items: center; gap: 3cqw; }
+.cedi-number { font-size: 5.4cqw; font-weight: 700; letter-spacing: .08em; }
+.cedi-nfc { width: 5cqw; height: 5cqw; }
+.cedi-label { font-size: 2.4cqw; letter-spacing: .12em; opacity: .6; }
+.cedi-name { font-size: 3.8cqw; font-weight: 700; text-transform: uppercase; }
+.cedi-balance-wrap { text-align: right; }
+.cedi-balance { font-size: 7cqw; font-weight: 700; }
+
+/* back */
+.cedi-strip {
+  position: absolute; top: 9%; left: 0; right: 0; height: 16%;
+  background: repeating-linear-gradient(45deg, #303030, #303030 10px, #202020 10px, #202020 20px);
+}
+.cedi-sign {
+  position: absolute; top: 36%; left: 5%; width: 55%; height: 10%;
+  background: #fff; border-radius: 2.5px;
+}
+.cedi-code {
+  position: absolute; top: 36%; left: 66%; width: 28%; height: 10%;
+  background: #fff; color: #000; border-radius: 2.5px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 3.5cqw;
+}

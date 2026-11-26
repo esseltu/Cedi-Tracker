@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { FaPlus, FaCalendarAlt, FaShieldAlt, FaExclamationTriangle, FaCheckCircle, FaInfoCircle, FaArrowDown, FaWallet, FaReceipt, FaWifi } from 'react-icons/fa';
+import { FaPlus, FaCalendarAlt, FaShieldAlt, FaExclamationTriangle, FaCheckCircle, FaInfoCircle, FaArrowDown, FaWallet, FaReceipt } from 'react-icons/fa';
 import { formatCurrency } from '../utils/currency';
 import { ResponsiveContainer, BarChart, Bar, LineChart, Line, Tooltip, XAxis } from 'recharts';
+import CediCard from './CediCard';
 
 const CustomXAxisTick = ({ x, y, payload, isExpense }) => {
   const isToday = payload.index === 6;
@@ -80,118 +81,12 @@ export const CediCardTile = ({ balance, cardHolder = 'YOU', last4 = '1234', clas
 
   return (
     <div className={`w-full ${className}`}>
-      <motion.div
-        initial={{ y: 15, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        className="relative overflow-hidden rounded-xl shadow-[0_12px_24px_rgba(0,0,0,0.2)] text-white select-none h-full md:h-auto md:aspect-[1.586/1] md:max-w-[500px] lg:h-full lg:aspect-auto min-h-[220px] flex flex-col justify-between"
-      >
-        {/* Underlying colorful elements (behind the glass) */}
-        <div className="absolute inset-0 bg-[#0d253d] dark:bg-[#0b1329] z-0" />
-        <div className="absolute -top-12 -right-12 w-48 h-48 bg-[#ea2261]/60 rounded-full blur-3xl pointer-events-none z-0" />
-        <div className="absolute -bottom-12 -left-12 w-48 h-48 bg-[#533afd]/70 rounded-full blur-3xl pointer-events-none z-0" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-[#4434d4]/40 rounded-full blur-2xl pointer-events-none z-0" />
-
-        {/* Glassmorphism Surface */}
-        <div 
-          className="absolute inset-0 z-10 backdrop-blur-[14px] border border-white/20"
-          style={{
-            background: 'linear-gradient(135deg, rgba(28, 30, 84, 0.45) 0%, rgba(13, 37, 61, 0.35) 55%, rgba(68, 52, 212, 0.3) 100%)'
-          }}
+      <motion.div initial={{ y: 15, opacity: 0 }} animate={{ y: 0, opacity: 1 }}>
+        <CediCard
+          holderName={cardHolder}
+          last4={last4}
+          formattedBalance={<AnimatedBalance value={balance} />}
         />
-
-        {/* Diagonal Light Reflection / Sheen */}
-        <div 
-          className="absolute inset-0 z-10 pointer-events-none mix-blend-overlay"
-          style={{
-            background: 'linear-gradient(105deg, transparent 25%, rgba(255,255,255,0.15) 30%, transparent 40%, transparent 45%, rgba(255,255,255,0.08) 50%, transparent 55%)'
-          }}
-        />
-
-        {/* Faint Grid Texture on the glass */}
-        <div 
-          className="absolute inset-0 opacity-[0.05] pointer-events-none z-10"
-          style={{
-            backgroundImage: 'repeating-linear-gradient(135deg, rgba(255,255,255,0.2) 0px, rgba(255,255,255,0.2) 1px, transparent 1px, transparent 8px)'
-          }}
-        />
-
-        {/* Card Content (z-20 so it sits above the glass) */}
-        <div className="relative z-20 p-6 flex flex-col justify-between h-full min-h-[220px]">
-          {/* Top Row: Logo & Network Icon */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              {/* Silver Chrome EMV Chip */}
-              <div 
-                className="relative w-11 h-8 rounded-md border border-white/40 shadow-sm overflow-hidden flex-shrink-0"
-                style={{
-                  background: 'linear-gradient(135deg, #f8fafc 0%, #cbd5e1 50%, #94a3b8 100%)'
-                }}
-              >
-                <div className="absolute inset-[2px] rounded-[3px] border border-black/20 pointer-events-none" />
-                <div className="absolute left-[4px] top-[2px] bottom-[2px] w-[10px] rounded-[2px] bg-black/10 border-r border-black/20" />
-                <div className="absolute right-[4px] top-[2px] bottom-[2px] w-[12px] rounded-[2px] bg-black/5" />
-                <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-px bg-black/25" />
-              </div>
-              <span 
-                className="text-xs font-semibold uppercase tracking-[0.2em] text-white/90"
-                style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}
-              >
-                CEDI CARD
-              </span>
-            </div>
-
-            {/* Network Icon */}
-            <div className="flex items-center relative pr-1">
-              <div className="w-7 h-7 rounded-full bg-[#533afd] shadow-sm" />
-              <div className="w-7 h-7 rounded-full bg-[#ea2261] -ml-3 opacity-90 backdrop-blur-sm shadow-sm mix-blend-multiply dark:mix-blend-normal" />
-            </div>
-          </div>
-
-          {/* Middle Row: Masked Card Number & NFC */}
-          <div className="mt-8 mb-6 flex items-center">
-            <div 
-              className="font-mono text-xl md:text-2xl tracking-[0.3em] text-white font-medium drop-shadow-md flex items-center font-tnum"
-              style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
-            >
-              <span>••••</span>
-              <span className="mx-3">••••</span>
-              <span className="mx-3">••••</span>
-              <span className="ml-3">{last4}</span>
-            </div>
-            <FaWifi size={22} className="rotate-90 text-white/80 ml-6" />
-          </div>
-
-          {/* Bottom Row: Card Holder, Balance, NFC */}
-          <div className="flex items-end justify-between w-full gap-4">
-            {/* Left Side: Holder */}
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] uppercase tracking-[0.1em] font-normal text-white/70 mb-1">
-                CARD HOLDER
-              </p>
-              <p 
-                className="text-sm font-medium text-white tracking-widest uppercase truncate" 
-                style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}
-              >
-                {cardHolder}
-              </p>
-            </div>
-
-            {/* Right Side: Balance */}
-            <div className="flex-1 flex flex-col items-end text-right">
-              <div className="flex flex-col items-end">
-                <p className="text-[10px] uppercase tracking-[0.1em] font-normal text-white/70 mb-1">
-                  BALANCE
-                </p>
-                <p 
-                  className="text-lg md:text-xl font-medium text-white tracking-tight font-tnum" 
-                  style={{ textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}
-                >
-                  <AnimatedBalance value={balance} />
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
       </motion.div>
     </div>
   );
